@@ -1,3 +1,12 @@
+use std::{env::args, path::PathBuf};
+
+use crate::tokenizing::tokenize;
+
+mod ast;
+mod ir_generation;
+mod tokenizing;
+
 fn main() {
-    println!("Hello, world!");
+    let source_file = PathBuf::from(args().nth(1).expect("No argument given"));
+    tokenize(&source_file).unwrap();
 }

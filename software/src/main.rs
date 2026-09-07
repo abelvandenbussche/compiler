@@ -3,6 +3,7 @@ use std::{env::args, path::PathBuf};
 use crate::tokenizing::tokenize;
 
 mod ast;
+mod ebnf_parser;
 mod ir_generation;
 mod tokenizing;
 

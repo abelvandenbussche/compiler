@@ -1,1 +1,1 @@
-variable_decleration = "let", identifier, [":", type], "=", value, ;
+variable_declaration = "let", variable_identifier, [":", type], "=", value;

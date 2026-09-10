@@ -1,8 +1,8 @@
-use EBNFTokens::*;
+use EBNFToken::*;
 const EBNF: &str = include_str!("../../../docs/grammar.ebnf");
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum EBNFTokens {
+pub enum EBNFToken {
     Identifier(String),
     Literal(String),
     LBracket,     // [
@@ -17,7 +17,7 @@ pub enum EBNFTokens {
 }
 
 /// Lexes the EBNF into a sequence of tokens
-pub fn lex() -> Vec<EBNFTokens> {
+pub fn lex() -> Vec<EBNFToken> {
     // Preprocessing
     const SPECIAL_CHARS: [char; 9] = ['[', ']', '(', ')', '{', '}', '=', ',', ';'];
     let processed_ebnf = space_special_chars(EBNF, &SPECIAL_CHARS);
@@ -195,7 +195,7 @@ mod tests {
             Comma,
             Identifier("value".to_owned()),
         ];
-        let output: Vec<EBNFTokens> = lex()
+        let output: Vec<EBNFToken> = lex()
             .into_iter()
             .take_while(|token| token != &Semicolon)
             .collect();

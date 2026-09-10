@@ -35,8 +35,6 @@ pub fn lex() -> Vec<EBNFToken> {
     const SPECIAL_CHARS: [char; 10] = ['[', ']', '(', ')', '{', '}', '=', ',', ';', '|'];
     let processed_ebnf = space_special_chars(EBNF, &SPECIAL_CHARS);
 
-    println!("processed: {processed_ebnf}");
-
     // Parsing
     let mut tokens = vec![];
     let mut in_progress = String::new();
@@ -47,7 +45,6 @@ pub fn lex() -> Vec<EBNFToken> {
             if c == '"' {
                 let stripped = remove_quotes(&in_progress);
                 quoting = false;
-                println!("End quote");
                 in_progress = String::new();
                 tokens.push(Literal(stripped));
             } else {
@@ -55,7 +52,6 @@ pub fn lex() -> Vec<EBNFToken> {
             }
             continue;
         }
-        println!("char: {c}");
         let result = match c {
             '[' => Some(LBracket),
             ']' => Some(RBracket),
@@ -76,7 +72,6 @@ pub fn lex() -> Vec<EBNFToken> {
                     // The end of a identifier
                     let done = Identifier(in_progress);
                     in_progress = String::new();
-                    println!("Identifier finished");
                     Some(done)
                 } else {
                     None
@@ -113,7 +108,6 @@ fn space_special_chars(original: &str, specials: &[char]) -> String {
     let mut quoting = false;
     // Putting spaces in the string
     for c in original.chars() {
-        println!("char: {c}");
         if quoting {
             processed.push(c);
             if c == '"' {

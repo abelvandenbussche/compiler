@@ -3,17 +3,28 @@ const EBNF: &str = include_str!("../../../docs/grammar.ebnf");
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum EBNFToken {
+    /// An identifier that is defined in another rule
     Identifier(String),
+    /// Literal characters
     Literal(String),
-    LBracket,     // [
-    RBracket,     // ]
-    LBrace,       // {
-    RBrace,       // }
-    LParentheses, // (
-    RParenthese,  // )
-    Equals,       // =
-    Comma,        // ,
-    Semicolon,    // ;
+    /// [
+    LBracket,
+    /// ]
+    RBracket,
+    /// ]
+    LBrace,
+    /// {
+    RBrace,
+    /// (
+    LParentheses,
+    /// )
+    RParenthese,
+    /// =
+    Equals,
+    /// ,
+    Comma,
+    /// ;
+    Semicolon,
 }
 
 /// Lexes the EBNF into a sequence of tokens

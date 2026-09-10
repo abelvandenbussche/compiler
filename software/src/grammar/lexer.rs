@@ -25,12 +25,14 @@ pub enum EBNFToken {
     Comma,
     /// ;
     Semicolon,
+    /// |
+    Pipe,
 }
 
 /// Lexes the EBNF into a sequence of tokens
 pub fn lex() -> Vec<EBNFToken> {
     // Preprocessing
-    const SPECIAL_CHARS: [char; 9] = ['[', ']', '(', ')', '{', '}', '=', ',', ';'];
+    const SPECIAL_CHARS: [char; 10] = ['[', ']', '(', ')', '{', '}', '=', ',', ';', '|'];
     let processed_ebnf = space_special_chars(EBNF, &SPECIAL_CHARS);
 
     println!("processed: {processed_ebnf}");
@@ -64,6 +66,7 @@ pub fn lex() -> Vec<EBNFToken> {
             '=' => Some(Equals),
             ';' => Some(Semicolon),
             ',' => Some(Comma),
+            '|' => Some(Pipe),
             '"' => {
                 quoting = true;
                 None
@@ -189,6 +192,7 @@ mod tests {
 
     #[test]
     fn tokenize_first_line() {
+        // This should change if the first line ever changes
         let expected = vec![
             Identifier("variable_declaration".to_owned()),
             Equals,

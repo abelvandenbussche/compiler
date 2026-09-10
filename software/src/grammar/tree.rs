@@ -1,4 +1,7 @@
-use crate::grammar::lexer::EBNFToken::*;
+use crate::grammar::{
+    lexer::EBNFToken::{Literal, *},
+    tree::Node::{Choice, Grouping, Optional, Reference, Sequence, ZeroOrMore},
+};
 
 use super::lexer::EBNFToken;
 
@@ -33,7 +36,8 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> Rule {
     let head = match tokens.into_iter().next() {
         Some(EBNFToken::Identifier(s)) => Rule {
             head: s,
-            body: Some(generate_rule_body(&body_tokens)),
+            // Also removes the leading equals
+            body: Some(generate_rule_body(&body_tokens[1..body_tokens.len()])),
         },
         Some(other) => panic!("Unexpected token: {:?}", other),
         None => panic!("Slice does not contain any elements"),
@@ -42,23 +46,67 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> Rule {
 }
 
 fn generate_rule_body(token_stream: &[EBNFToken]) -> Node {
-    let mut place_holder_node;
-    for (idx, token) in token_stream.iter().enumerate() {
-        match token {
-            LBrace | LBracket | LParentheses => {
-                if let Some(match_location) = find_matching_delimiter(idx, &token_stream) {
-                    let contained_slice = &token_stream[idx + 1..match_location];
-                    println!("slice: {:?}", contained_slice);
-                    place_holder_node = generate_rule_body(contained_slice);
+    let mut nodes = vec![];
+    let mut token_iter = token_stream.iter().enumerate();
+    loop {
+        if let Some((idx, token)) = token_iter.next() {
+            let result = match token {
+                LBrace | LBracket | LParentheses => {
+                    if let Some(match_location) = find_matching_delimiter(idx, &token_stream) {
+                        let contained_slice = &token_stream[idx + 1..match_location];
+                        let result = generate_rule_body(contained_slice);
+                        let product = match token {
+                            LBrace => ZeroOrMore(Box::new(result)),
+                            LBracket => Optional(Box::new(result)),
+                            LParentheses => Grouping(Box::new(result)),
+                            _ => unreachable!(),
+                        };
+                        nodes.push(product);
+                        // Skipping to the end of the slice in the current iterator
+                        for _ in idx..match_location {
+                            let _ = token_iter.next();
+                        }
+                        None
+                    } else {
+                        panic!("Non matching delimiter at {idx} in {:?}", token_stream);
+                    }
+                }
+                Literal(s) => Some(Node::Literal(s.clone())),
+                Identifier(s) => Some(Reference(s.clone())),
+                Pipe => {
+                    // Moving the last node into this one
+                    if let Some(last_node) = nodes.pop() {
+                        Some(Choice(vec![last_node]))
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            };
+
+            if let Some(node) = result {
+                // Checking if the last element is a choice or not
+                let possible_last = nodes.pop();
+                if let Some(Choice(mut choice_list)) = possible_last {
+                    choice_list.push(node);
+                    nodes.push(Choice(choice_list));
                 } else {
-                    panic!("Non matching delimiter at {idx} in {:?}", token_stream);
+                    // Re-add the last element if needed
+                    if let Some(last_node) = possible_last {
+                        nodes.push(last_node);
+                    }
+                    nodes.push(node);
                 }
             }
-            _ => {}
+        } else {
+            break;
         }
     }
-    unimplemented!();
-    place_holder_node
+    match nodes.len() {
+        0 => panic!("No nodes to parse"),
+        1 => nodes.remove(0),
+        _ => Sequence(nodes),
+    }
 }
 
 /// Finds the position of the matching open delimiter given an index of an open delimiter
@@ -167,7 +215,7 @@ mod tests {
             EBNFToken::Literal("2".to_owned()),
             Comma,
             EBNFToken::Literal("3".to_owned()),
-            RBracket,
+            RBrace,
             Semicolon,
         ];
         let expected_rule = Rule {

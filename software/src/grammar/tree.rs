@@ -1,3 +1,5 @@
+use crate::grammar::lexer::EBNFToken::*;
+
 use super::lexer::EBNFToken;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -27,18 +29,52 @@ pub struct Rule {
 /// Parses a stream of tokens into a tree structure
 pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> Rule {
     // A rule should always start with an identifier
-    let head = match tokens.remove(0) {
-        EBNFToken::Identifier(s) => Rule {
+    let body_tokens = tokens.split_off(tokens.iter().position(|i| *i == Equals).unwrap());
+    let head = match tokens.into_iter().next() {
+        Some(EBNFToken::Identifier(s)) => Rule {
             head: s,
-            body: None,
+            body: Some(generate_rule_body(&body_tokens)),
         },
-        other => panic!("Unexpected token: {:?}", other),
+        Some(other) => panic!("Unexpected token: {:?}", other),
+        None => panic!("Slice does not contain any elements"),
     };
     head
 }
 
-fn generate_rule_body(token_stream: Vec<EBNFToken>) -> Node {
-    unimplemented!()
+fn generate_rule_body(token_stream: &[EBNFToken]) -> Node {
+    let mut place_holder_node;
+    for (idx, token) in token_stream.iter().enumerate() {
+        match token {
+            LBrace | LBracket | LParentheses => {
+                if let Some(match_location) = find_matching_delimiter(idx, &token_stream) {
+                    let contained_slice = &token_stream[idx + 1..match_location];
+                    println!("slice: {:?}", contained_slice);
+                    place_holder_node = generate_rule_body(contained_slice);
+                } else {
+                    panic!("Non matching delimiter at {idx} in {:?}", token_stream);
+                }
+            }
+            _ => {}
+        }
+    }
+    unimplemented!();
+    place_holder_node
+}
+
+/// Finds the position of the matching open delimiter given an index of an open delimiter
+fn find_matching_delimiter(left_idx: usize, list: &[EBNFToken]) -> Option<usize> {
+    let mut depth = 0;
+    for (idx, token) in list.iter().enumerate().skip(left_idx) {
+        match token {
+            LBracket | LBrace | LParentheses => depth += 1,
+            RBracket | RBrace | RParenthese => depth -= 1,
+            _ => {}
+        }
+        if depth == 0 {
+            return Some(idx);
+        }
+    }
+    None
 }
 
 #[cfg(test)]
@@ -47,10 +83,28 @@ mod tests {
         lexer::EBNFToken::{self, *},
         tree::{
             Node::{self, *},
-            Rule, parse_tokens,
+            Rule, find_matching_delimiter, parse_tokens,
         },
     };
 
+    #[test]
+    fn finding_matching_closing_delimiter() {
+        let list = vec![
+            LBracket,
+            LBracket,
+            LBrace,
+            RBrace,
+            LParentheses,
+            LBrace,
+            RBrace,
+            RParenthese,
+            RBracket,
+        ];
+        assert_eq!(find_matching_delimiter(1, &list), Some(8));
+        assert_eq!(find_matching_delimiter(2, &list), Some(3));
+        assert_eq!(find_matching_delimiter(4, &list), Some(7));
+        assert_eq!(find_matching_delimiter(0, &list), None);
+    }
     #[test]
     fn very_simple_tree_from_tokens() {
         // foo = "bar";

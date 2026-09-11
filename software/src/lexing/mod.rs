@@ -1,5 +1,9 @@
 use std::{fs::File, io::BufReader};
 
+use crate::lexing::state_machine::DFA;
+
+mod state_machine;
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum Token {
     Identifier(String),
@@ -18,6 +22,7 @@ pub enum ReservedKeyword {
 /// memory
 pub struct Lexer {
     reader: BufReader<File>,
+    dfa: DFA,
 }
 impl Lexer {
     /// Creates a new lexer

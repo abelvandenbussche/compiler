@@ -1,7 +1,7 @@
 use super::Token;
 
-/// ## Deterministic Finite Automaton
-/// A state machine that systematically reads characters and changes state based on it
+/// ## Deterministic Finite Automaton ≈ Finite state machine
+/// A state machine that systematically reads characters and changes its state based on it
 pub struct DFA {
     state: Option<Token>,
 }

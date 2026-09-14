@@ -1,9 +1,14 @@
 use std::{
+    fmt::Display,
     fs::File,
     io::{BufRead, BufReader},
+    str::FromStr,
 };
 
-use crate::lexing::state_machine::DFA;
+use crate::lexing::{
+    ReservedKeyword::{For, VariableDeclaration, While},
+    state_machine::DFA,
+};
 
 mod state_machine;
 
@@ -21,6 +26,34 @@ pub enum ReservedKeyword {
     VariableDeclaration,
     While,
     For,
+}
+
+// Allows for the conversion from enum member to string
+// This automatically implements the ToString trait and thus allows conversion to String
+impl Display for ReservedKeyword {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let output = match self {
+            Self::Function => "fn",
+            VariableDeclaration => "let",
+            While => "while",
+            For => "for",
+        };
+        f.write_str(output)
+    }
+}
+
+// Allow for the conversion from string to keyword enum member
+impl FromStr for ReservedKeyword {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "fn" => Ok(Self::Function),
+            "let" => Ok(VariableDeclaration),
+            "while" => Ok(While),
+            "for" => Ok(For),
+            _ => Err("String is not a valid keyword".to_owned()),
+        }
+    }
 }
 
 /// A lexer that can emit a stream of tokens instead of loading a full files worth of tokens in to

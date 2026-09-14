@@ -45,7 +45,11 @@ impl DFA {
 
 #[cfg(test)]
 mod tests {
-    use super::super::Token::{self, *};
+
+    use super::super::{
+        ReservedKeyword::{self, *},
+        Token::{self, *},
+    };
     use super::DFA;
 
     /// A helper function to test the state machine\
@@ -66,5 +70,16 @@ mod tests {
     fn very_simple_lexing() {
         assert_eq!(feed_string(" = "), Some(Equals));
         assert_eq!(feed_string(" == "), Some(EqualsEquals));
+    }
+    #[test]
+    fn lex_keywords() {
+        assert_eq!(
+            feed_string(&format!("{} ", ReservedKeyword::For)),
+            Some(Keyword(ReservedKeyword::For))
+        );
+        assert_eq!(
+            feed_string(&format!("{} ", VariableDeclaration)),
+            Some(Keyword(VariableDeclaration))
+        );
     }
 }

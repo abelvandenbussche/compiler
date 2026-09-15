@@ -12,20 +12,47 @@ use crate::lexing::{
 
 mod state_machine;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum Token {
+    /// Things like variable or function names
     Identifier(String),
+    /// Reserved keywords like "for" or "while"
     Keyword(ReservedKeyword),
+    /// Any literal
+    Literal(Literal),
+    /// ==
     EqualsEquals,
+    /// =
     Equals,
+    /// {
+    LBrace,
+    /// }
+    RBrace,
+    /// [
+    LBracket,
+    /// ]
+    RBracket,
+    /// (
+    LParentheses,
+    /// )
+    RParentheses,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum ReservedKeyword {
     Function,
     VariableDeclaration,
     While,
     For,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Literal {
+    Char(char),
+    String(String),
+    Int(i128),
+    Float(f64),
+    Bool(bool),
 }
 
 // Allows for the conversion from enum member to string

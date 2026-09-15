@@ -1,4 +1,10 @@
-use crate::lexing::Token::{Equals, EqualsEquals, Identifier};
+use super::Token::*;
+use std::str::FromStr;
+
+use crate::lexing::{
+    ReservedKeyword,
+    Token::{Equals, EqualsEquals, Identifier},
+};
 
 use super::Token;
 
@@ -21,7 +27,7 @@ impl DFA {
 
     /// Consumes the next character and returns wether or not it has reached a final token
     pub fn advance(&mut self, next_char: char) -> Option<Token> {
-        if let Some(state_token) = &self.state {
+        if let Some(state_token) = &mut self.state {
             match state_token {
                 Equals => {
                     if next_char == '=' {
@@ -29,6 +35,20 @@ impl DFA {
                     } else {
                         return Some(Equals);
                     }
+                }
+                Identifier(current_ident) => {
+                    if next_char == ' ' {
+                        // End of identifier
+                        // Checking if it is a reserved keyword
+                        return Some(
+                            if let Ok(keyword) = ReservedKeyword::from_str(&current_ident) {
+                                Keyword(keyword)
+                            } else {
+                                Identifier(current_ident.clone())
+                            },
+                        );
+                    }
+                    current_ident.push(next_char);
                 }
                 _ => {}
             }
@@ -72,7 +92,7 @@ mod tests {
         assert_eq!(feed_string(" == "), Some(EqualsEquals));
     }
     #[test]
-    fn lex_keywords() {
+    fn lex_keywords_and_identifiers() {
         assert_eq!(
             feed_string(&format!("{} ", ReservedKeyword::For)),
             Some(Keyword(ReservedKeyword::For))
@@ -80,6 +100,11 @@ mod tests {
         assert_eq!(
             feed_string(&format!("{} ", VariableDeclaration)),
             Some(Keyword(VariableDeclaration))
+        );
+        assert_eq!(feed_string("myvar "), Some(Identifier("myvar".to_owned())));
+        assert_eq!(
+            feed_string(&format!("{}test ", VariableDeclaration)),
+            Some(Identifier(format!("{}test", VariableDeclaration)))
         );
     }
 }

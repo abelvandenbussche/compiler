@@ -55,6 +55,12 @@ impl DFA {
         } else {
             self.state = match next_char {
                 '=' => Some(Equals),
+                '{' => return Some(LBrace),
+                '}' => return Some(RBrace),
+                '[' => return Some(LBracket),
+                ']' => return Some(RBracket),
+                '(' => return Some(LParentheses),
+                ')' => return Some(RParentheses),
                 ' ' => None,
                 c => Some(Identifier(String::from(c))),
             }
@@ -106,5 +112,14 @@ mod tests {
             feed_string(&format!("{}test ", VariableDeclaration)),
             Some(Identifier(format!("{}test", VariableDeclaration)))
         );
+    }
+    #[test]
+    fn lex_brackets() {
+        assert_eq!(feed_string("{"), Some(LBrace));
+        assert_eq!(feed_string("}"), Some(RBrace));
+        assert_eq!(feed_string("("), Some(LParentheses));
+        assert_eq!(feed_string(")"), Some(RParentheses));
+        assert_eq!(feed_string("["), Some(LBracket));
+        assert_eq!(feed_string("]"), Some(RBracket));
     }
 }

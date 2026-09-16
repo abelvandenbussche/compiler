@@ -1,12 +1,8 @@
-use super::Token::*;
-use std::str::FromStr;
-
-use crate::lexing::{
+use super::{
     ReservedKeyword,
-    Token::{Equals, EqualsEquals, Identifier},
+    Token::{self, *},
 };
-
-use super::Token;
+use std::str::FromStr;
 
 /// ## Deterministic Finite Automaton ≈ Finite state machine
 /// A state machine that systematically reads characters and changes its state based on it

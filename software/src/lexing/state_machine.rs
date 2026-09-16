@@ -1,8 +1,9 @@
+use crate::lexing::Literal;
+
 use super::{
     ReservedKeyword,
     Token::{self, *},
 };
-use regex::Regex;
 use std::str::FromStr;
 
 /// ## Deterministic Finite Automaton ≈ Finite state machine
@@ -11,7 +12,22 @@ pub struct DFA {
     state: Option<Token>,
 }
 
-const IDENTIFIER_EXPRESSION: &str = r"";
+// Make a list of valid identifier characters
+// This list does not include numbers because numbers are not valid as the first character
+const IDENTIFIER_CHARS: [char; 26 * 2 + 1] = {
+    let mut arr = [' '; 53];
+    let mut i = 0;
+    while i < 26 {
+        let c = (b'a' + i as u8) as char;
+        // Lowercase
+        arr[i] = c;
+        // Uppercase
+        arr[i + 26] = c.to_ascii_uppercase();
+        i += 1;
+    }
+    arr[52] = '_';
+    arr
+};
 
 impl DFA {
     /// Create a new DFA instance
@@ -26,6 +42,7 @@ impl DFA {
 
     /// Consumes the next character and returns wether or not it has reached a final token
     pub fn advance(&mut self, next_char: char) -> Option<Token> {
+        println!("char: {next_char}");
         if let Some(state_token) = &mut self.state {
             match state_token {
                 Equals => {
@@ -39,16 +56,24 @@ impl DFA {
                     if next_char == ' ' {
                         // End of identifier
                         // Checking if it is a reserved keyword
-                        return Some(
-                            if let Ok(keyword) = ReservedKeyword::from_str(&current_ident) {
-                                Keyword(keyword)
-                            } else {
-                                Identifier(current_ident.clone())
-                            },
-                        );
+                        return if let Ok(keyword) = ReservedKeyword::from_str(&current_ident) {
+                            Some(Keyword(keyword))
+                        } else {
+                            self.state.take()
+                        };
                     }
                     current_ident.push(next_char);
                 }
+                Literal(variant) => match variant {
+                    Literal::Int(int) => {
+                        if let Some(new_digit) = next_char.to_digit(10) {
+                            *int = *int * 10 + new_digit as i128;
+                        } else {
+                            return self.state.take();
+                        }
+                    }
+                    _ => todo!(),
+                },
                 _ => {}
             }
         } else {
@@ -63,7 +88,15 @@ impl DFA {
                 ';' => return Some(Semicolon),
                 ':' => return Some(Colon),
                 ' ' => None,
-                c => Some(Identifier(String::from(c))),
+                c => {
+                    if IDENTIFIER_CHARS.contains(&c) {
+                        Some(Identifier(String::from(c)))
+                    } else if let Some(digit) = next_char.to_digit(10) {
+                        Some(Literal(Literal::Int(digit as i128)))
+                    } else {
+                        None
+                    }
+                }
             }
         }
         None

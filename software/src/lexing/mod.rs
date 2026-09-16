@@ -139,10 +139,12 @@ impl Lexer {
 /// Internal test module for tokenizing
 #[cfg(test)]
 mod tests {
-    use crate::lexing::{Lexer, Literal, ReservedKeyword::VariableDeclaration, Token::*};
-
-    use super::ReservedKeyword;
-    use std::{convert::identity, fs::File, path::PathBuf, str::FromStr};
+    use super::{
+        Lexer, Literal,
+        ReservedKeyword::{self, *},
+        Token::*,
+    };
+    use std::{fs::File, path::PathBuf, str::FromStr};
     const TEST_FILE_DIR: &str = "test_files";
     #[test]
     fn keyword_parsing() {

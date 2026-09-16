@@ -2,6 +2,7 @@ use super::{
     ReservedKeyword,
     Token::{self, *},
 };
+use regex::Regex;
 use std::str::FromStr;
 
 /// ## Deterministic Finite Automaton ≈ Finite state machine
@@ -9,6 +10,8 @@ use std::str::FromStr;
 pub struct DFA {
     state: Option<Token>,
 }
+
+const IDENTIFIER_EXPRESSION: &str = r"";
 
 impl DFA {
     /// Create a new DFA instance

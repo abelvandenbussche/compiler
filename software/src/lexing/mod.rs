@@ -124,7 +124,19 @@ impl Lexer {
     }
 }
 /// Internal test module for tokenizing
+#[cfg(test)]
 mod tests {
+    use super::ReservedKeyword;
+    use std::str::FromStr;
     const TEST_FILE_DIR: &str = "test_files";
-    fn token_test1() {}
+    #[test]
+    fn keyword_parsing() {
+        fn test_variant(variant: ReservedKeyword) {
+            assert_eq!(ReservedKeyword::from_str(&variant.to_string()), Ok(variant));
+        }
+        test_variant(ReservedKeyword::For);
+        test_variant(ReservedKeyword::While);
+        test_variant(ReservedKeyword::VariableDeclaration);
+        test_variant(ReservedKeyword::Function);
+    }
 }

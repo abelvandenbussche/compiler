@@ -36,6 +36,10 @@ pub enum Token {
     LParentheses,
     /// )
     RParentheses,
+    /// ;
+    Semicolon,
+    /// :
+    Colon,
 }
 
 #[derive(Debug, PartialEq)]
@@ -104,8 +108,14 @@ impl Lexer {
     }
     /// Lexes the next token
     pub fn next_token(&mut self) -> Option<Token> {
-        let next_char = self.next_char()?;
-        self.dfa.advance(next_char)
+        loop {
+            let next_char = self.next_char()?;
+            let result = self.dfa.advance(next_char);
+            if let Some(token) = result {
+                self.dfa.reset();
+                return Some(token);
+            }
+        }
     }
 
     /// Returns the next character of the file
@@ -129,8 +139,10 @@ impl Lexer {
 /// Internal test module for tokenizing
 #[cfg(test)]
 mod tests {
+    use crate::lexing::{Lexer, Literal, ReservedKeyword::VariableDeclaration, Token::*};
+
     use super::ReservedKeyword;
-    use std::str::FromStr;
+    use std::{convert::identity, fs::File, path::PathBuf, str::FromStr};
     const TEST_FILE_DIR: &str = "test_files";
     #[test]
     fn keyword_parsing() {
@@ -143,5 +155,31 @@ mod tests {
         test_variant(ReservedKeyword::VariableDeclaration);
         test_variant(ReservedKeyword::Function);
         test_variant(ReservedKeyword::Return);
+    }
+    #[test]
+    fn token_test1() {
+        let test_dir = PathBuf::from(format!("{TEST_FILE_DIR}/token_test1.txt"));
+        let mut lexer = Lexer::new(File::open(test_dir).unwrap());
+        let mut tokens = vec![];
+        while let Some(token) = lexer.next_token() {
+            tokens.push(token);
+        }
+        assert_eq!(
+            tokens,
+            vec![
+                Keyword(VariableDeclaration),
+                Identifier("foo".to_owned()),
+                Equals,
+                Literal(Literal::Int(1)),
+                Semicolon,
+                Keyword(VariableDeclaration),
+                Identifier("bar".to_owned()),
+                Colon,
+                Identifier("int".to_owned()),
+                Equals,
+                Literal(Literal::Int(2)),
+                Semicolon,
+            ]
+        )
     }
 }

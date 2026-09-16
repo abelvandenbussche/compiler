@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::lexing::{
-    ReservedKeyword::{For, VariableDeclaration, While},
+    ReservedKeyword::{For, Return, VariableDeclaration, While},
     state_machine::DFA,
 };
 
@@ -44,6 +44,7 @@ pub enum ReservedKeyword {
     VariableDeclaration,
     While,
     For,
+    Return,
 }
 
 #[derive(Debug, PartialEq)]
@@ -64,6 +65,7 @@ impl Display for ReservedKeyword {
             VariableDeclaration => "let",
             While => "while",
             For => "for",
+            Return => "return",
         };
         f.write_str(output)
     }
@@ -78,6 +80,7 @@ impl FromStr for ReservedKeyword {
             "let" => Ok(VariableDeclaration),
             "while" => Ok(While),
             "for" => Ok(For),
+            "return" => Ok(Return),
             _ => Err("String is not a valid keyword".to_owned()),
         }
     }
@@ -131,6 +134,7 @@ mod tests {
     const TEST_FILE_DIR: &str = "test_files";
     #[test]
     fn keyword_parsing() {
+        /// Tests if you can turn the keyword into a string and then turn it back into a keyword
         fn test_variant(variant: ReservedKeyword) {
             assert_eq!(ReservedKeyword::from_str(&variant.to_string()), Ok(variant));
         }
@@ -138,5 +142,6 @@ mod tests {
         test_variant(ReservedKeyword::While);
         test_variant(ReservedKeyword::VariableDeclaration);
         test_variant(ReservedKeyword::Function);
+        test_variant(ReservedKeyword::Return);
     }
 }

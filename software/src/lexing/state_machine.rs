@@ -57,6 +57,8 @@ impl DFA {
                 ']' => return Some(RBracket),
                 '(' => return Some(LParentheses),
                 ')' => return Some(RParentheses),
+                ';' => return Some(Semicolon),
+                ':' => return Some(Colon),
                 ' ' => None,
                 c => Some(Identifier(String::from(c))),
             }
@@ -117,5 +119,7 @@ mod tests {
         assert_eq!(feed_string(")"), Some(RParentheses));
         assert_eq!(feed_string("["), Some(LBracket));
         assert_eq!(feed_string("]"), Some(RBracket));
+        assert_eq!(feed_string(";"), Some(Semicolon));
+        assert_eq!(feed_string(":"), Some(Colon));
     }
 }

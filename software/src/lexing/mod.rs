@@ -40,6 +40,14 @@ pub enum Token {
     Semicolon,
     /// :
     Colon,
+    /// +
+    Plus,
+    /// -
+    Minus,
+    /// *
+    MultiplicationSign,
+    /// /
+    DivisionSign,
 }
 
 #[derive(Debug, PartialEq)]
@@ -154,6 +162,7 @@ impl Lexer {
     }
 }
 /// Internal test module for tokenizing
+/// These focus on files and the larger whole rather than individual token lexing
 #[cfg(test)]
 mod tests {
     use super::{
@@ -238,5 +247,42 @@ mod tests {
                 RBrace
             ]
         );
+    }
+    #[test]
+    fn token_test_operations() {
+        let test_dir = PathBuf::from(format!("{TEST_FILE_DIR}/token_test_operations.txt"));
+        let mut lexer = Lexer::new(File::open(test_dir).unwrap()).unwrap();
+        let mut tokens = vec![];
+        while let Some(token) = lexer.next_token() {
+            tokens.push(token);
+        }
+        assert_eq!(
+            tokens,
+            vec![
+                Literal(Literal::Int(1)),
+                Plus,
+                LParentheses,
+                Literal(Literal::Int(2)),
+                MultiplicationSign,
+                Literal(Literal::Int(4)),
+                RParentheses,
+                DivisionSign,
+                Literal(Literal::Int(6)),
+                Semicolon,
+                Literal(Literal::Int(5)),
+                DivisionSign,
+                Literal(Literal::Int(4)),
+                DivisionSign,
+                Literal(Literal::Int(2)),
+                Plus,
+                LParentheses,
+                Literal(Literal::Int(5)),
+                MultiplicationSign,
+                Literal(Literal::Int(30)),
+                Minus,
+                Literal(Literal::Int(15)),
+                RParentheses,
+            ]
+        )
     }
 }

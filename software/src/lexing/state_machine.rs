@@ -128,6 +128,10 @@ impl DFA {
                 ')' => return Some(RParentheses),
                 ';' => return Some(Semicolon),
                 ':' => return Some(Colon),
+                '+' => return Some(Plus),
+                '-' => return Some(Minus),
+                '*' => return Some(MultiplicationSign),
+                '/' => return Some(DivisionSign),
                 ' ' => None,
                 c => {
                     if IDENTIFIER_CHARS.contains(&c) {
@@ -156,6 +160,7 @@ impl DFA {
     }
 }
 
+/// These tests focus on the capability to identify single tokens
 #[cfg(test)]
 mod tests {
 

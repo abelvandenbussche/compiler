@@ -2,18 +2,30 @@
 //! into an AST (abstract syntax tree), with wich we can catch syntax errors and generate the IR
 //! [intermediate representation](https://llvm.org/docs/LangRef.html)
 
+use crate::lexing::Token;
+
 /// Defines the nodes of the AST
-pub enum TreeNode {}
+pub enum TreeNode {
+    ProgramBlock(Vec<TreeNode>),
+}
 
 /// A parser struct used to parse a token stream
 pub struct Parser {
     current_tree: TreeNode,
+    tokens: Vec<Token>,
 }
 
 impl Parser {
     /// Create a new parser instance
-    pub fn new() -> Self {
-        unimplemented!()
+    pub fn new(tokens: Vec<Token>) -> Self {
+        Self {
+            current_tree: TreeNode::ProgramBlock(vec![]),
+            tokens,
+        }
+    }
+    /// Process the list of tokens
+    pub fn process() -> TreeNode {
+        todo!()
     }
 }
 

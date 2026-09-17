@@ -79,12 +79,30 @@ impl DFA {
                     Literal::Int(int) => {
                         if let Some(new_digit) = self.current_char.to_digit(10) {
                             *int = *int * 10 + new_digit as i128;
+                        } else if self.current_char == '.' {
+                            println!("float found");
+                            self.state = Some(Literal(Literal::Float(*int as f64)))
                         } else {
                             return self.state.take();
                         }
 
                         if !self.next_char.is_digit(10) {
                             return self.state.take();
+                        }
+                    }
+                    Literal::Float(float) => {
+                        if self.current_char.is_digit(10) {
+                            let mut float_string = float.to_string();
+                            float_string.push(self.current_char);
+                            // Safe to unwrap because of above checks
+                            *float = f64::from_str(&float_string).unwrap();
+                        }
+                    }
+                    Literal::String(string) => {
+                        if self.current_char == '"' {
+                            return self.state.take();
+                        } else {
+                            string.push(self.current_char);
                         }
                     }
                     _ => todo!(),
@@ -94,6 +112,7 @@ impl DFA {
         } else {
             self.state = match self.current_char {
                 '=' => Some(Equals),
+                '"' => Some(Literal(Literal::String(String::new()))),
                 '{' => return Some(LBrace),
                 '}' => return Some(RBrace),
                 '[' => return Some(LBracket),
@@ -108,7 +127,7 @@ impl DFA {
                         Some(Identifier(String::from(c)))
                     } else if let Some(digit) = self.current_char.to_digit(10) {
                         let value = Some(Literal(Literal::Int(digit as i128)));
-                        if self.next_char.is_digit(10) {
+                        if self.next_char.is_digit(10) || self.next_char == '.' {
                             value
                         } else {
                             return value;

@@ -187,4 +187,30 @@ mod tests {
         assert_eq!(feed_string(";"), Some(Semicolon));
         assert_eq!(feed_string(":"), Some(Colon));
     }
+
+    #[test]
+    fn lex_literals() {
+        assert_eq!(
+            feed_string("\"Hello world\""),
+            Some(Literal(crate::lexing::Literal::String(
+                "Hello world".to_owned()
+            )))
+        );
+        assert_eq!(
+            feed_string("10"),
+            Some(Literal(crate::lexing::Literal::Int(10)))
+        );
+        assert_eq!(
+            feed_string("2.5"),
+            Some(Literal(crate::lexing::Literal::Float(2.5)))
+        );
+        assert_eq!(
+            feed_string("true"),
+            Some(Literal(crate::lexing::Literal::Bool(true)))
+        );
+        assert_eq!(
+            feed_string("true"),
+            Some(Literal(crate::lexing::Literal::Bool(false)))
+        );
+    }
 }

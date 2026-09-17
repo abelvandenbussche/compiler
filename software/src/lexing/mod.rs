@@ -116,13 +116,17 @@ impl Lexer {
     /// Lexes the next token
     pub fn next_token(&mut self) -> Option<Token> {
         loop {
-            let next_char = self.next_char()?;
-            let result = self.dfa.advance(next_char);
-            if let Some(token) = result {
-                self.dfa.reset();
-                return Some(token);
+            if let Some(next_char) = self.next_char() {
+                let result = self.dfa.advance(next_char);
+                if let Some(token) = result {
+                    self.dfa.reset();
+                    return Some(token);
+                }
+            } else {
+                break;
             }
         }
+        self.dfa.finish()
     }
 
     /// Returns the next character of the file

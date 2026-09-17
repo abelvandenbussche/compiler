@@ -186,8 +186,8 @@ mod tests {
 
     #[test]
     fn very_simple_lexing() {
-        assert_eq!(feed_string(" = "), Some(Equals));
-        assert_eq!(feed_string(" == "), Some(EqualsEquals));
+        assert_eq!(feed_string("= "), Some(Equals));
+        assert_eq!(feed_string("=="), Some(EqualsEquals));
     }
     #[test]
     fn lex_keywords_and_identifiers() {
@@ -199,7 +199,7 @@ mod tests {
             feed_string(&format!("{} ", VariableDeclaration)),
             Some(Keyword(VariableDeclaration))
         );
-        assert_eq!(feed_string("myvar "), Some(Identifier("myvar".to_owned())));
+        assert_eq!(feed_string("myvar"), Some(Identifier("myvar".to_owned())));
         assert_eq!(
             feed_string(&format!("{}test ", VariableDeclaration)),
             Some(Identifier(format!("{}test", VariableDeclaration)))

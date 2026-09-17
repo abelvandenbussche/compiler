@@ -70,6 +70,10 @@ impl DFA {
                         // Checking if it is a reserved keyword
                         return if let Ok(keyword) = ReservedKeyword::from_str(&current_ident) {
                             Some(Keyword(keyword))
+                        } else if *current_ident == "false" {
+                            Some(Literal(Literal::Bool(false)))
+                        } else if *current_ident == "true" {
+                            Some(Literal(Literal::Bool(true)))
                         } else {
                             self.state.take()
                         };
@@ -81,7 +85,8 @@ impl DFA {
                             *int = *int * 10 + new_digit as i128;
                         } else if self.current_char == '.' {
                             println!("float found");
-                            self.state = Some(Literal(Literal::Float(*int as f64)))
+                            self.state = Some(Literal(Literal::Float(*int as f64)));
+                            println!("float: {:?}", self.state);
                         } else {
                             return self.state.take();
                         }
@@ -92,10 +97,15 @@ impl DFA {
                     }
                     Literal::Float(float) => {
                         if self.current_char.is_digit(10) {
-                            let mut float_string = float.to_string();
+                            let mut float_string =
+                                format!("{:?}", float).trim_matches('0').to_owned();
+                            // Stripping trailing zeros
                             float_string.push(self.current_char);
                             // Safe to unwrap because of above checks
                             *float = f64::from_str(&float_string).unwrap();
+                            if !self.next_char.is_digit(10) {
+                                return self.state.take();
+                            }
                         }
                     }
                     Literal::String(string) => {
@@ -228,7 +238,7 @@ mod tests {
             Some(Literal(crate::lexing::Literal::Bool(true)))
         );
         assert_eq!(
-            feed_string("true"),
+            feed_string("false"),
             Some(Literal(crate::lexing::Literal::Bool(false)))
         );
     }

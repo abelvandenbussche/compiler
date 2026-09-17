@@ -53,7 +53,6 @@ impl DFA {
         self.current_char = self.next_char;
         self.next_char = next_char;
 
-        println!("char: {}", self.current_char);
         if let Some(state_token) = &mut self.state {
             match state_token {
                 Equals => {
@@ -84,9 +83,7 @@ impl DFA {
                         if let Some(new_digit) = self.current_char.to_digit(10) {
                             *int = *int * 10 + new_digit as i128;
                         } else if self.current_char == '.' {
-                            println!("float found");
                             self.state = Some(Literal(Literal::Float(*int as f64)));
-                            println!("float: {:?}", self.state);
                         } else {
                             return self.state.take();
                         }

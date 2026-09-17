@@ -64,7 +64,8 @@ impl DFA {
                     }
                 }
                 Identifier(current_ident) => {
-                    if self.current_char == ' ' {
+                    current_ident.push(self.current_char);
+                    if !IDENTIFIER_CHARS.contains(&self.next_char) {
                         // End of identifier
                         // Checking if it is a reserved keyword
                         return if let Ok(keyword) = ReservedKeyword::from_str(&current_ident) {
@@ -73,13 +74,16 @@ impl DFA {
                             self.state.take()
                         };
                     }
-                    current_ident.push(self.current_char);
                 }
                 Literal(variant) => match variant {
                     Literal::Int(int) => {
                         if let Some(new_digit) = self.current_char.to_digit(10) {
                             *int = *int * 10 + new_digit as i128;
                         } else {
+                            return self.state.take();
+                        }
+
+                        if !self.next_char.is_digit(10) {
                             return self.state.take();
                         }
                     }
@@ -103,7 +107,12 @@ impl DFA {
                     if IDENTIFIER_CHARS.contains(&c) {
                         Some(Identifier(String::from(c)))
                     } else if let Some(digit) = self.current_char.to_digit(10) {
-                        Some(Literal(Literal::Int(digit as i128)))
+                        let value = Some(Literal(Literal::Int(digit as i128)));
+                        if self.next_char.is_digit(10) {
+                            value
+                        } else {
+                            return value;
+                        }
                     } else {
                         None
                     }

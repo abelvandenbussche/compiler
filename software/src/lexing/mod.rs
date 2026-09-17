@@ -1,7 +1,7 @@
 use std::{
     fmt::Display,
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Read},
     str::FromStr,
 };
 
@@ -100,9 +100,16 @@ pub struct Lexer {
 impl Lexer {
     /// Creates a new lexer
     pub fn new(file: File) -> Self {
+        let mut buf: [u8; 1];
+        file.read_exact(&mut buf);
+        let first_char = buf
+            .iter()
+            .map(|e| *e as char)
+            .next()
+            .expect("Failed to take first char");
         Self {
             reader: BufReader::new(file),
-            dfa: DFA::new(),
+            dfa: DFA::new(first_char),
             current_line: vec![],
         }
     }

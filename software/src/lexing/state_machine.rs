@@ -10,6 +10,7 @@ use std::str::FromStr;
 /// A state machine that systematically reads characters and changes its state based on it
 pub struct DFA {
     state: Option<Token>,
+    current_char: char,
 }
 
 // Make a list of valid identifier characters
@@ -31,8 +32,8 @@ const IDENTIFIER_CHARS: [char; 26 * 2 + 1] = {
 
 impl DFA {
     /// Create a new DFA instance
-    pub fn new() -> Self {
-        Self { state: None }
+    pub fn new(first_char: char) -> Self {
+        Self { state: None, current_char: first_char }
     }
 
     /// Resets the state machine to its original state and clears its read string
@@ -158,4 +159,5 @@ mod tests {
         assert_eq!(feed_string(";"), Some(Semicolon));
         assert_eq!(feed_string(":"), Some(Colon));
     }
+}
 }

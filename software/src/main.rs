@@ -6,6 +6,7 @@ mod ast;
 mod grammar;
 mod ir_generation;
 mod lexing;
+mod parsing;
 
 fn main() {
     let source_file = PathBuf::from(args().nth(1).expect("No argument given"));

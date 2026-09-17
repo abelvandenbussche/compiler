@@ -2,7 +2,6 @@ use std::{env::args, fs::File, path::PathBuf};
 
 use crate::lexing::Lexer;
 
-mod ast;
 mod grammar;
 mod ir_generation;
 mod lexing;

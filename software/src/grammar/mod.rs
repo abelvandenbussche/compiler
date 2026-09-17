@@ -1,3 +1,6 @@
+//! This module parses the grammar from the grammar file into rules that the [crate::parsing] can use on the
+//! source code
+
 use crate::grammar::{
     lexer::{EBNFToken::Semicolon, lex},
     tree::{Rule, parse_tokens},

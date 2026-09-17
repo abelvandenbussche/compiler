@@ -147,7 +147,7 @@ impl DFA {
         }
         None
     }
-    /// Similar to the `advance` method but does not take a char instead giving it an whitespace
+    /// Similar to the [crate::lexing::state_machine::DFA::advance] method but does not take a char instead giving it an whitespace
     /// character
     ///
     /// This should be called when at the end of a source file
@@ -166,7 +166,7 @@ mod tests {
     use super::DFA;
 
     /// A helper function to test the state machine\
-    /// Feeds a string into the state machine and returns its first not `None` output or none if it
+    /// Feeds a string into the state machine and returns its first not [None] output or none if it
     /// did not give any
     fn feed_string(string: &str) -> Option<Token> {
         let mut chars_iter = string.chars();

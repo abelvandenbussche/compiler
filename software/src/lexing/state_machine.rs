@@ -11,6 +11,7 @@ use std::str::FromStr;
 pub struct DFA {
     state: Option<Token>,
     current_char: char,
+    next_char: char,
 }
 
 // Make a list of valid identifier characters
@@ -33,7 +34,12 @@ const IDENTIFIER_CHARS: [char; 26 * 2 + 1] = {
 impl DFA {
     /// Create a new DFA instance
     pub fn new(first_char: char) -> Self {
-        Self { state: None, current_char: first_char }
+        Self {
+            state: None,
+            // This will get replaced the first call of advance
+            current_char: ' ',
+            next_char: first_char,
+        }
     }
 
     /// Resets the state machine to its original state and clears its read string
@@ -43,18 +49,22 @@ impl DFA {
 
     /// Consumes the next character and returns wether or not it has reached a final token
     pub fn advance(&mut self, next_char: char) -> Option<Token> {
-        println!("char: {next_char}");
+        // Switching it around
+        self.current_char = self.next_char;
+        self.next_char = next_char;
+
+        println!("char: {}", self.current_char);
         if let Some(state_token) = &mut self.state {
             match state_token {
                 Equals => {
-                    if next_char == '=' {
+                    if self.current_char == '=' {
                         return Some(EqualsEquals);
                     } else {
                         return Some(Equals);
                     }
                 }
                 Identifier(current_ident) => {
-                    if next_char == ' ' {
+                    if self.current_char == ' ' {
                         // End of identifier
                         // Checking if it is a reserved keyword
                         return if let Ok(keyword) = ReservedKeyword::from_str(&current_ident) {
@@ -63,11 +73,11 @@ impl DFA {
                             self.state.take()
                         };
                     }
-                    current_ident.push(next_char);
+                    current_ident.push(self.current_char);
                 }
                 Literal(variant) => match variant {
                     Literal::Int(int) => {
-                        if let Some(new_digit) = next_char.to_digit(10) {
+                        if let Some(new_digit) = self.current_char.to_digit(10) {
                             *int = *int * 10 + new_digit as i128;
                         } else {
                             return self.state.take();
@@ -78,7 +88,7 @@ impl DFA {
                 _ => {}
             }
         } else {
-            self.state = match next_char {
+            self.state = match self.current_char {
                 '=' => Some(Equals),
                 '{' => return Some(LBrace),
                 '}' => return Some(RBrace),
@@ -92,7 +102,7 @@ impl DFA {
                 c => {
                     if IDENTIFIER_CHARS.contains(&c) {
                         Some(Identifier(String::from(c)))
-                    } else if let Some(digit) = next_char.to_digit(10) {
+                    } else if let Some(digit) = self.current_char.to_digit(10) {
                         Some(Literal(Literal::Int(digit as i128)))
                     } else {
                         None
@@ -101,6 +111,13 @@ impl DFA {
             }
         }
         None
+    }
+    /// Similar to the `advance` method but does not take a char instead giving it an whitespace
+    /// character
+    ///
+    /// This should be called when at the end of a source file
+    pub fn finish(&mut self) -> Option<Token> {
+        self.advance(' ')
     }
 }
 
@@ -117,14 +134,16 @@ mod tests {
     /// Feeds a string into the state machine and returns its first not `None` output or none if it
     /// did not give any
     fn feed_string(string: &str) -> Option<Token> {
-        let mut dfa = DFA::new();
-        for c in string.chars() {
+        let mut chars_iter = string.chars();
+        let first_char = chars_iter.next().unwrap();
+        let mut dfa = DFA::new(first_char);
+        for c in chars_iter {
             let res = dfa.advance(c);
             if res.is_some() {
                 return res;
             }
         }
-        None
+        dfa.finish()
     }
 
     #[test]
@@ -159,5 +178,4 @@ mod tests {
         assert_eq!(feed_string(";"), Some(Semicolon));
         assert_eq!(feed_string(":"), Some(Colon));
     }
-}
 }

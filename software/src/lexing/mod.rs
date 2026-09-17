@@ -1,7 +1,7 @@
 use std::{
     fmt::Display,
     fs::File,
-    io::{BufRead, BufReader, Read},
+    io::{self, BufRead, BufReader, Read},
     str::FromStr,
 };
 
@@ -99,19 +99,19 @@ pub struct Lexer {
 }
 impl Lexer {
     /// Creates a new lexer
-    pub fn new(file: File) -> Self {
-        let mut buf: [u8; 1];
-        file.read_exact(&mut buf);
+    pub fn new(mut file: File) -> io::Result<Self> {
+        let mut buf: [u8; 1] = [0];
+        file.read_exact(&mut buf)?;
         let first_char = buf
             .iter()
             .map(|e| *e as char)
             .next()
             .expect("Failed to take first char");
-        Self {
+        Ok(Self {
             reader: BufReader::new(file),
             dfa: DFA::new(first_char),
             current_line: vec![],
-        }
+        })
     }
     /// Lexes the next token
     pub fn next_token(&mut self) -> Option<Token> {
@@ -168,7 +168,7 @@ mod tests {
     #[test]
     fn token_test1() {
         let test_dir = PathBuf::from(format!("{TEST_FILE_DIR}/token_test1.txt"));
-        let mut lexer = Lexer::new(File::open(test_dir).unwrap());
+        let mut lexer = Lexer::new(File::open(test_dir).unwrap()).unwrap();
         let mut tokens = vec![];
         while let Some(token) = lexer.next_token() {
             tokens.push(token);

@@ -5,10 +5,7 @@ use std::{
     str::FromStr,
 };
 
-use crate::lexing::{
-    ReservedKeyword::{For, Return, VariableDeclaration, While},
-    state_machine::DFA,
-};
+use crate::lexing::{ReservedKeyword::*, state_machine::DFA};
 
 mod state_machine;
 
@@ -49,6 +46,8 @@ pub enum ReservedKeyword {
     While,
     For,
     Return,
+    If,
+    Else,
 }
 
 #[derive(Debug, PartialEq)]
@@ -70,6 +69,8 @@ impl Display for ReservedKeyword {
             While => "while",
             For => "for",
             Return => "return",
+            If => "if",
+            Else => "else",
         };
         f.write_str(output)
     }
@@ -85,6 +86,8 @@ impl FromStr for ReservedKeyword {
             "while" => Ok(While),
             "for" => Ok(For),
             "return" => Ok(Return),
+            "if" => Ok(If),
+            "else" => Ok(Else),
             _ => Err("String is not a valid keyword".to_owned()),
         }
     }
@@ -194,5 +197,43 @@ mod tests {
                 Semicolon,
             ]
         )
+    }
+    #[test]
+    fn token_test2() {
+        let test_dir = PathBuf::from(format!("{TEST_FILE_DIR}/token_test2.txt"));
+        let mut lexer = Lexer::new(File::open(test_dir).unwrap()).unwrap();
+        let mut tokens = vec![];
+        while let Some(token) = lexer.next_token() {
+            tokens.push(token);
+        }
+        assert_eq!(
+            tokens,
+            vec![
+                Keyword(ReservedKeyword::VariableDeclaration),
+                Identifier("my_var".to_owned()),
+                Equals,
+                Literal(Literal::String("Hello world".to_owned())),
+                Semicolon,
+                Keyword(ReservedKeyword::If),
+                Identifier("my_var".to_owned()),
+                EqualsEquals,
+                Literal(Literal::String("Hello world".to_owned())),
+                LBrace,
+                Identifier("print".to_owned()),
+                LParentheses,
+                Literal(Literal::String("Yep".to_owned())),
+                RParentheses,
+                Semicolon,
+                RBrace,
+                Keyword(ReservedKeyword::Else),
+                LBrace,
+                Identifier("print".to_owned()),
+                LParentheses,
+                Literal(Literal::String("Nope".to_owned())),
+                RParentheses,
+                Semicolon,
+                RBrace
+            ]
+        );
     }
 }

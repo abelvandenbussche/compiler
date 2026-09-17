@@ -1,0 +1,7 @@
+let my_var = "Hello world";
+if my_var == "Hello world" {
+    print("Yep");
+}
+else {
+    print("Nope");
+}

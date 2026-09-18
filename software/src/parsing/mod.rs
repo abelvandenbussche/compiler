@@ -7,6 +7,34 @@ use crate::lexing::Token;
 /// Defines the nodes of the AST
 pub enum TreeNode {
     ProgramBlock(Vec<TreeNode>),
+    Function {
+        name: String,
+        return_value: Type,
+        arguments: Vec<(String, Type)>,
+    },
+    VariableDeclaration {
+        name: String,
+        var_type: Type,
+    },
+    IfStatement {
+        // expression: ?
+        block: Box<TreeNode>,
+    },
+}
+
+/// The most primitive types that can't be represented by the others
+pub enum PrimitiveType {
+    Char,
+    Bool,
+    Int,
+    Float,
+}
+
+/// A complex representation of types built on a foundation of primitives
+pub enum Type {
+    Primitive(PrimitiveType),
+    Collection(Vec<Type>),
+    Pointer(Box<Type>),
 }
 
 /// A parser struct used to parse a token stream

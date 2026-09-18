@@ -8,7 +8,10 @@ use std::{
     str::FromStr,
 };
 
-use crate::lexing::{ReservedKeyword::*, state_machine::DFA};
+use crate::{
+    common::Literal,
+    lexing::{ReservedKeyword::*, state_machine::DFA},
+};
 
 mod state_machine;
 
@@ -59,15 +62,6 @@ pub enum ReservedKeyword {
     Return,
     If,
     Else,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Literal {
-    Char(char),
-    String(String),
-    Int(i128),
-    Float(f64),
-    Bool(bool),
 }
 
 // Allows for the conversion from enum member to string

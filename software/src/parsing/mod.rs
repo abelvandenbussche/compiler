@@ -2,7 +2,7 @@
 //! into an AST (abstract syntax tree), with wich we can catch syntax errors and generate the IR
 //! [intermediate representation](https://llvm.org/docs/LangRef.html)
 
-use crate::lexing::Token;
+use crate::{common::Literal, lexing::Token};
 
 /// Defines the nodes of the AST
 pub enum TreeNode {
@@ -20,6 +20,7 @@ pub enum TreeNode {
         // expression: ?
         block: Box<TreeNode>,
     },
+    Literal(Literal),
 }
 
 /// The most primitive types that can't be represented by the others

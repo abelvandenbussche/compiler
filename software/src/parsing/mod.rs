@@ -6,20 +6,30 @@ use crate::{common::Literal, lexing::Token};
 
 /// Defines the nodes of the AST
 pub enum TreeNode {
+    /// Collection of nodes representing lines of source code
     ProgramBlock(Vec<TreeNode>),
+    /// A function with a name, args, return value, and code block
     Function {
         name: String,
+        block: Box<TreeNode>,
         return_value: Type,
         arguments: Vec<(String, Type)>,
     },
-    VariableDeclaration {
-        name: String,
-        var_type: Type,
+    /// A variable assignment with a left- and righthand side
+    Assignment {
+        lhs: Box<TreeNode>,
+        rhs: Box<TreeNode>,
     },
+    /// Decision block with expression, code block and pointer to the next statement eg. else if or
+    /// else
     IfStatement {
-        // expression: ?
+        expression: Box<TreeNode>,
         block: Box<TreeNode>,
+        else_expression: Option<Box<TreeNode>>,
     },
+    /// Executes if a if statement links to it and its expression is false
+    ElseStatement { block: Box<TreeNode> },
+    /// A literal value
     Literal(Literal),
 }
 

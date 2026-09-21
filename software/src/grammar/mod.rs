@@ -7,7 +7,7 @@ use crate::grammar::{
 };
 
 mod lexer;
-mod tree;
+pub mod tree;
 
 pub fn get_rules() {}
 fn get_tree() -> Vec<Rule> {

@@ -1,32 +1,32 @@
 use crate::grammar::{
     lexer::EBNFToken::{Literal, *},
-    tree::Node::{Choice, Grouping, Optional, Reference, Sequence, ZeroOrMore},
+    tree::GrammarNode::{Choice, Grouping, Optional, Reference, Sequence, ZeroOrMore},
 };
 
 use super::lexer::EBNFToken;
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum Node {
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum GrammarNode {
     /// Literal characters
     Literal(String),
     /// Reference to another rule
     Reference(String),
     /// A sequence of nodes
-    Sequence(Vec<Node>),
+    Sequence(Vec<GrammarNode>),
     /// Optional node
-    Optional(Box<Node>),
+    Optional(Box<GrammarNode>),
     /// 1 or more of a node
-    ZeroOrMore(Box<Node>),
+    ZeroOrMore(Box<GrammarNode>),
     /// Groupes multiple nodes together
-    Grouping(Box<Node>),
+    Grouping(Box<GrammarNode>),
     /// Choice of a single node
-    Choice(Vec<Node>),
+    Choice(Vec<GrammarNode>),
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Rule {
     pub head: String,
-    pub body: Option<Node>,
+    pub body: Option<GrammarNode>,
 }
 
 /// Parses a stream of tokens into a tree structure
@@ -45,7 +45,7 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> Rule {
     head
 }
 
-fn generate_rule_body(token_stream: &[EBNFToken]) -> Node {
+fn generate_rule_body(token_stream: &[EBNFToken]) -> GrammarNode {
     let mut nodes = vec![];
     let mut token_iter = token_stream.iter().enumerate();
     loop {
@@ -71,7 +71,7 @@ fn generate_rule_body(token_stream: &[EBNFToken]) -> Node {
                         panic!("Non matching delimiter at {idx} in {:?}", token_stream);
                     }
                 }
-                Literal(s) => Some(Node::Literal(s.clone())),
+                Literal(s) => Some(GrammarNode::Literal(s.clone())),
                 Identifier(s) => Some(Reference(s.clone())),
                 Pipe => {
                     // Moving the last node into this one
@@ -130,7 +130,7 @@ mod tests {
     use crate::grammar::{
         lexer::EBNFToken::{self, *},
         tree::{
-            Node::{self, *},
+            GrammarNode::{self, *},
             Rule, find_matching_delimiter, parse_tokens,
         },
     };
@@ -164,7 +164,7 @@ mod tests {
         ];
         let expected = Rule {
             head: "foo".to_owned(),
-            body: Some(Node::Literal("bar".to_owned())),
+            body: Some(GrammarNode::Literal("bar".to_owned())),
         };
         assert_eq!(parse_tokens(tokens), expected);
     }
@@ -189,8 +189,8 @@ mod tests {
             head: "foo".to_owned(),
             body: Some(Sequence(vec![
                 Optional(Box::new(Choice(vec![
-                    Node::Literal("hello".to_owned()),
-                    Node::Literal("world".to_owned()),
+                    GrammarNode::Literal("hello".to_owned()),
+                    GrammarNode::Literal("world".to_owned()),
                 ]))),
                 ZeroOrMore(Box::new(Reference("digit".to_owned()))),
             ])),
@@ -221,14 +221,14 @@ mod tests {
         let expected_rule = Rule {
             head: "foo".to_owned(),
             body: Some(Sequence(vec![
-                Optional(Box::new(Node::Literal("1".to_owned()))),
+                Optional(Box::new(GrammarNode::Literal("1".to_owned()))),
                 Choice(vec![
                     Reference("bar".to_owned()),
                     Reference("fizz".to_owned()),
                 ]),
                 ZeroOrMore(Box::new(Sequence(vec![
-                    Node::Literal("2".to_owned()),
-                    Node::Literal("3".to_owned()),
+                    GrammarNode::Literal("2".to_owned()),
+                    GrammarNode::Literal("3".to_owned()),
                 ]))),
             ])),
         };

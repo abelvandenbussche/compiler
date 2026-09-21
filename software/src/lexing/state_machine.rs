@@ -1,9 +1,6 @@
 use crate::lexing::Literal;
 
-use super::{
-    ReservedKeyword,
-    Token::{self, *},
-};
+use super::Token::{self, *};
 use std::str::FromStr;
 
 /// ## Deterministic Finite Automaton ≈ Finite state machine
@@ -67,9 +64,7 @@ impl DFA {
                     if !IDENTIFIER_CHARS.contains(&self.next_char) {
                         // End of identifier
                         // Checking if it is a reserved keyword
-                        return if let Ok(keyword) = ReservedKeyword::from_str(&current_ident) {
-                            Some(Keyword(keyword))
-                        } else if *current_ident == "false" {
+                        return if *current_ident == "false" {
                             Some(Literal(Literal::Bool(false)))
                         } else if *current_ident == "true" {
                             Some(Literal(Literal::Bool(true)))
@@ -164,10 +159,7 @@ impl DFA {
 #[cfg(test)]
 mod tests {
 
-    use super::super::{
-        ReservedKeyword::{self, *},
-        Token::{self, *},
-    };
+    use super::super::Token::{self, *};
     use super::DFA;
 
     /// A helper function to test the state machine\
@@ -190,22 +182,6 @@ mod tests {
     fn very_simple_lexing() {
         assert_eq!(feed_string("= "), Some(Equals));
         assert_eq!(feed_string("=="), Some(EqualsEquals));
-    }
-    #[test]
-    fn lex_keywords_and_identifiers() {
-        assert_eq!(
-            feed_string(&format!("{} ", ReservedKeyword::For)),
-            Some(Keyword(ReservedKeyword::For))
-        );
-        assert_eq!(
-            feed_string(&format!("{} ", VariableDeclaration)),
-            Some(Keyword(VariableDeclaration))
-        );
-        assert_eq!(feed_string("myvar"), Some(Identifier("myvar".to_owned())));
-        assert_eq!(
-            feed_string(&format!("{}test ", VariableDeclaration)),
-            Some(Identifier(format!("{}test", VariableDeclaration)))
-        );
     }
     #[test]
     fn lex_brackets() {

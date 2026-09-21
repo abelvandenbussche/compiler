@@ -2,16 +2,11 @@
 //! the [crate::parsing]
 
 use std::{
-    fmt::Display,
     fs::File,
     io::{self, BufRead, BufReader, Read},
-    str::FromStr,
 };
 
-use crate::{
-    common::Literal,
-    lexing::{ReservedKeyword::*, state_machine::DFA},
-};
+use crate::{common::Literal, lexing::state_machine::DFA};
 
 mod state_machine;
 
@@ -19,8 +14,6 @@ mod state_machine;
 pub enum Token {
     /// Things like variable or function names
     Identifier(String),
-    /// Reserved keywords like "for" or "while"
-    Keyword(ReservedKeyword),
     /// Any literal
     Literal(Literal),
     /// ==
@@ -51,51 +44,6 @@ pub enum Token {
     MultiplicationSign,
     /// /
     DivisionSign,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum ReservedKeyword {
-    Function,
-    VariableDeclaration,
-    While,
-    For,
-    Return,
-    If,
-    Else,
-}
-
-// Allows for the conversion from enum member to string
-// This automatically implements the ToString trait and thus allows conversion to String
-impl Display for ReservedKeyword {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let output = match self {
-            Self::Function => "fn",
-            VariableDeclaration => "let",
-            While => "while",
-            For => "for",
-            Return => "return",
-            If => "if",
-            Else => "else",
-        };
-        f.write_str(output)
-    }
-}
-
-// Allow for the conversion from string to keyword enum member
-impl FromStr for ReservedKeyword {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "fn" => Ok(Self::Function),
-            "let" => Ok(VariableDeclaration),
-            "while" => Ok(While),
-            "for" => Ok(For),
-            "return" => Ok(Return),
-            "if" => Ok(If),
-            "else" => Ok(Else),
-            _ => Err("String is not a valid keyword".to_owned()),
-        }
-    }
 }
 
 /// A lexer that can emit a stream of tokens instead of loading a full files worth of tokens in to
@@ -159,25 +107,9 @@ impl Lexer {
 /// These focus on files and the larger whole rather than individual token lexing
 #[cfg(test)]
 mod tests {
-    use super::{
-        Lexer, Literal,
-        ReservedKeyword::{self, *},
-        Token::*,
-    };
-    use std::{fs::File, path::PathBuf, str::FromStr};
+    use super::{Lexer, Literal, Token::*};
+    use std::{fs::File, path::PathBuf};
     const TEST_FILE_DIR: &str = "test_files";
-    #[test]
-    fn keyword_parsing() {
-        /// Tests if you can turn the keyword into a string and then turn it back into a keyword
-        fn test_variant(variant: ReservedKeyword) {
-            assert_eq!(ReservedKeyword::from_str(&variant.to_string()), Ok(variant));
-        }
-        test_variant(ReservedKeyword::For);
-        test_variant(ReservedKeyword::While);
-        test_variant(ReservedKeyword::VariableDeclaration);
-        test_variant(ReservedKeyword::Function);
-        test_variant(ReservedKeyword::Return);
-    }
     #[test]
     fn token_test1() {
         let test_dir = PathBuf::from(format!("{TEST_FILE_DIR}/token_test1.txt"));
@@ -189,12 +121,12 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Keyword(VariableDeclaration),
+                Identifier("let".to_owned()),
                 Identifier("foo".to_owned()),
                 Equals,
                 Literal(Literal::Int(1)),
                 Semicolon,
-                Keyword(VariableDeclaration),
+                Identifier("let".to_owned()),
                 Identifier("bar".to_owned()),
                 Colon,
                 Identifier("int".to_owned()),
@@ -215,12 +147,12 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Keyword(ReservedKeyword::VariableDeclaration),
+                Identifier("let".to_owned()),
                 Identifier("my_var".to_owned()),
                 Equals,
                 Literal(Literal::String("Hello world".to_owned())),
                 Semicolon,
-                Keyword(ReservedKeyword::If),
+                Identifier("if".to_owned()),
                 Identifier("my_var".to_owned()),
                 EqualsEquals,
                 Literal(Literal::String("Hello world".to_owned())),
@@ -231,7 +163,7 @@ mod tests {
                 RParentheses,
                 Semicolon,
                 RBrace,
-                Keyword(ReservedKeyword::Else),
+                Identifier("else".to_owned()),
                 LBrace,
                 Identifier("print".to_owned()),
                 LParentheses,

@@ -25,8 +25,8 @@ pub enum Node {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Rule {
-    head: String,
-    body: Option<Node>,
+    pub head: String,
+    pub body: Option<Node>,
 }
 
 /// Parses a stream of tokens into a tree structure

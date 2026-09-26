@@ -21,3 +21,20 @@ C --> D
 D --> E
 E --> F
 ```
+
+## General idea
+```mermaid
+mindmap
+root((compiler))
+  Procedural syntax
+    EBNF
+    Predefined components
+  Features
+    Basic
+      Variables
+      Control flow
+      Functions
+    Advanced
+      Classes / Structs
+      Memory management
+```

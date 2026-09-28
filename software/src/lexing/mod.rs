@@ -2,6 +2,7 @@
 //! the [crate::parsing]
 
 use std::{
+    fmt::Display,
     fs::File,
     io::{self, BufRead, BufReader, Read},
 };
@@ -44,6 +45,30 @@ pub enum Token {
     MultiplicationSign,
     /// /
     DivisionSign,
+}
+
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let stringified = match self {
+            Self::Plus => "+",
+            Self::Minus => "-",
+            Self::DivisionSign => "/",
+            Self::MultiplicationSign => "*",
+            Self::Equals => "=",
+            Self::EqualsEquals => "==",
+            Self::LBrace => "{",
+            Self::RBrace => "}",
+            Self::LBracket => "[",
+            Self::RBracket => "]",
+            Self::LParentheses => "(",
+            Self::RParentheses => ")",
+            Self::Semicolon => ";",
+            Self::Colon => ":",
+            Self::Identifier(ident) => ident,
+            Self::Literal(lit) => &lit.to_string(),
+        };
+        f.write_str(stringified)
+    }
 }
 
 /// A lexer that can emit a stream of tokens instead of loading a full files worth of tokens in to

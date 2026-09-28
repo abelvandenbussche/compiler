@@ -109,6 +109,9 @@ mod tests {
         };
         let operator_nodes = operator_rule.body.clone().unwrap();
         let matcher = GrammarMatcher::new(vec![operator_rule, digit_rule]);
-        assert!(matcher.is_match(&tokens, &operator_nodes));
+        assert_eq!(
+            matcher.matches(&tokens, &operator_nodes),
+            Some(tokens.as_slice())
+        );
     }
 }

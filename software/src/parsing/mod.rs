@@ -22,8 +22,8 @@ enum MatchNode {
 struct GrammarMatcher {
     /// All the rules that the user has defined
     rules: HashMap<String, GrammarNode>,
-    /// Are all the previously matched nodes
-    matched_nodes: Vec<MatchNode>,
+    /// Main tree unit
+    main_tree: Option<MatchNode>,
     /// All tokens that have been used to build the current match
     used_tokens: Vec<Token>,
     /// The current node that is being build
@@ -44,7 +44,7 @@ impl GrammarMatcher {
         }
         Self {
             rules: map,
-            matched_nodes: vec![],
+            main_tree: None,
             current_node: Some(MatchNode::Rule {
                 name: "program".to_owned(),
                 children: vec![],
@@ -60,15 +60,10 @@ impl GrammarMatcher {
     }
 
     /// Checks whether a certain rule is compatible with the used tokens
-    fn is_match(&self, rule_key: String) -> bool {
-        // let mut le_stack = vec![];
-        let rule = if let Some(rule) = self.rules.get(&rule_key) {
-            rule
-        } else {
-            return false;
-        };
+    fn is_match(&self, tokens: &Vec<Token>, rule: &GrammarNode) -> bool {
         match rule {
-            _ => {}
+            GrammarNode::Sequence(list) => {}
+            _ => unreachable!(),
         }
         todo!()
     }
@@ -82,29 +77,38 @@ mod tests {
         lexing::Token,
         parsing::GrammarMatcher,
     };
-
-    #[test]
-    fn simple_match() {
-        let rules = vec![
-            Rule {
-                head: "program".to_owned(),
-                body: Some(GrammarNode::Choice(vec![
-                    GrammarNode::Reference("print statement".to_owned()),
-                    GrammarNode::Literal("Hello world".to_string()),
-                ])),
-            },
-            Rule {
-                head: "print statement".to_owned(),
-                body: Some(GrammarNode::Literal("foo".to_owned())),
-            },
-        ];
-        let mut matcher = GrammarMatcher::new(rules);
-        let tokens = vec![Token::Literal(Literal::String(
-            "print statement".to_owned(),
-        ))];
-    }
     #[test]
     fn match_tokens_with_rule() {
-        // let tokens = vec![Token::]
+        let tokens = vec![
+            Token::Literal(Literal::Int(5)),
+            Token::Plus,
+            Token::Literal(Literal::Int(15)),
+        ];
+        let operator_rule = Rule {
+            head: "addition".to_owned(),
+            body: Some(GrammarNode::Sequence(vec![
+                GrammarNode::Reference("digit".to_owned()),
+                GrammarNode::Literal("+".to_owned()),
+                GrammarNode::Reference("digit".to_owned()),
+            ])),
+        };
+        let digit_rule = Rule {
+            head: "digit".to_owned(),
+            body: Some(GrammarNode::Choice(vec![
+                GrammarNode::Literal("0".to_owned()),
+                GrammarNode::Literal("1".to_owned()),
+                GrammarNode::Literal("2".to_owned()),
+                GrammarNode::Literal("3".to_owned()),
+                GrammarNode::Literal("4".to_owned()),
+                GrammarNode::Literal("5".to_owned()),
+                GrammarNode::Literal("6".to_owned()),
+                GrammarNode::Literal("7".to_owned()),
+                GrammarNode::Literal("8".to_owned()),
+                GrammarNode::Literal("9".to_owned()),
+            ])),
+        };
+        let operator_nodes = operator_rule.body.clone().unwrap();
+        let matcher = GrammarMatcher::new(vec![operator_rule, digit_rule]);
+        assert!(matcher.is_match(&tokens, &operator_nodes));
     }
 }

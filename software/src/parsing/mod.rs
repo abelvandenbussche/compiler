@@ -59,13 +59,61 @@ impl GrammarMatcher {
         todo!()
     }
 
-    /// Checks whether a certain rule is compatible with the used tokens
-    fn is_match(&self, tokens: &Vec<Token>, rule: &GrammarNode) -> bool {
+    /// Checks whether a certain rule is valid inside the given tokens,
+    /// not all tokens need to match. Only the first to nth token need to fully match. It returns
+    /// the tokens wich matched
+    ///
+    /// # Error
+    /// Returns an `None` value if there was no match or something unexpected but recoverable
+    /// happened
+    fn matches<'a>(&self, tokens: &'a Vec<Token>, rule: &GrammarNode) -> Option<&'a [Token]> {
         match rule {
-            GrammarNode::Sequence(list) => {}
-            _ => unreachable!(),
+            GrammarNode::Sequence(list) => {
+                let mut result = vec![];
+                for i in list {
+                    if let Some(matched_slice) = self.matches(tokens, i) {
+                        for token in matched_slice {
+                            result.push(token)
+                        }
+                    } else {
+                        return None;
+                    }
+                }
+                // Some(result.as_slice())
+                todo!()
+            }
+            GrammarNode::Reference(reference) => {
+                if let Some(new_rule) = self.rules.get(reference) {
+                    self.matches(tokens, new_rule)
+                } else {
+                    None
+                }
+            }
+            GrammarNode::Choice(to_choose) => {
+                for i in to_choose {
+                    let result = self.matches(tokens, i);
+                    if result.is_some() {
+                        return result;
+                    }
+                }
+                None
+            }
+            GrammarNode::Literal(literal) => {
+                if tokens.len() == 0 {
+                    panic!("Fuck");
+                }
+                let first_token = &tokens[0];
+                if first_token.to_string() == *literal {
+                    Some(&tokens[0..1])
+                } else {
+                    None
+                }
+            }
+            other => {
+                println!("Got here with: ({:?})", other);
+                todo!()
+            }
         }
-        todo!()
     }
 }
 

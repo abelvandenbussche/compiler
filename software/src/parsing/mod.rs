@@ -66,16 +66,20 @@ impl GrammarMatcher {
     /// # Error
     /// Returns an `None` value if there was no match or something unexpected but recoverable
     /// happened
-    fn matches<'a>(&self, tokens: &'a Vec<Token>, rule: &GrammarNode) -> Option<&'a [Token]> {
+    fn matches<'a>(&self, tokens: &'a [Token], rule: &GrammarNode) -> Option<&'a [Token]> {
+        println!("processing rule: {:?}", rule);
         match rule {
             GrammarNode::Sequence(list) => {
                 let mut result = vec![];
+                let mut first_index = 0;
                 for i in list {
-                    if let Some(matched_slice) = self.matches(tokens, i) {
+                    if let Some(matched_slice) = self.matches(&tokens[first_index..], i) {
                         for token in matched_slice {
-                            result.push(token)
+                            result.push(token);
+                            first_index += matched_slice.len();
                         }
                     } else {
+                        println!("sequence none");
                         return None;
                     }
                 }
@@ -86,6 +90,7 @@ impl GrammarMatcher {
                 if let Some(new_rule) = self.rules.get(reference) {
                     self.matches(tokens, new_rule)
                 } else {
+                    println!("reference none");
                     None
                 }
             }
@@ -96,6 +101,7 @@ impl GrammarMatcher {
                         return result;
                     }
                 }
+                println!("choice none");
                 None
             }
             GrammarNode::Literal(literal) => {
@@ -103,6 +109,7 @@ impl GrammarMatcher {
                     panic!("Fuck");
                 }
                 let first_token = &tokens[0];
+                println!("{first_token}, {literal}");
                 if first_token.to_string() == *literal {
                     Some(&tokens[0..1])
                 } else {

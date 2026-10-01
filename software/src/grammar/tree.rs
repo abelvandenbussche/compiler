@@ -23,6 +23,7 @@ pub enum GrammarNode {
     Choice(Vec<GrammarNode>),
 }
 
+/// Rules used by the parser to match `terminals` produced by the lexer
 #[derive(Debug, PartialEq, Eq)]
 pub struct Rule {
     pub head: String,
@@ -33,7 +34,7 @@ pub struct Rule {
 pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> Rule {
     // A rule should always start with an identifier
     let body_tokens = tokens.split_off(tokens.iter().position(|i| *i == Equals).unwrap());
-    let head = match tokens.into_iter().next() {
+    let rule = match tokens.into_iter().next() {
         Some(EBNFToken::Identifier(s)) => Rule {
             head: s,
             // Also removes the leading equals
@@ -42,9 +43,10 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> Rule {
         Some(other) => panic!("Unexpected token: {:?}", other),
         None => panic!("Slice does not contain any elements"),
     };
-    head
+    rule
 }
 
+/// Takes in a stream of tokens and uses it to generate a `GrammarNode` that is the body of a rule
 fn generate_rule_body(token_stream: &[EBNFToken]) -> GrammarNode {
     let mut nodes = vec![];
     let mut token_iter = token_stream.iter().enumerate();

@@ -136,6 +136,7 @@ mod tests {
     };
     #[test]
     fn match_tokens_with_rule() {
+        todo!();
         let tokens = vec![
             Token {
                 head: "INTEGER".to_owned(),

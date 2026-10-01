@@ -6,7 +6,7 @@ use std::str::FromStr;
 /// ## Deterministic Finite Automaton ≈ Finite state machine
 /// A state machine that systematically reads characters and changes its state based on it
 pub struct LexerMatcher {
-    state: Option<String>,
+    working_string: String,
     rules: Vec<Rule>,
 }
 
@@ -30,20 +30,24 @@ const IDENTIFIER_CHARS: [char; 26 * 2 + 1] = {
 impl LexerMatcher {
     /// Create a new DFA instance
     pub fn new(first_char: char, rules: Vec<Rule>) -> Self {
-        Self { state: None, rules }
+        Self {
+            working_string: String::new(),
+            rules,
+        }
     }
 
     /// Resets the state machine to its original state and clears its read string
     pub fn reset(&mut self) {
-        self.state = None;
+        self.working_string = String::new();
     }
 
     /// Consumes the next character and returns wether or not it has reached a final token
     pub fn advance(&mut self, next_char: char) -> Option<Token> {
+        self.working_string.push(next_char);
         None
     }
-    /// Similar to the [crate::lexing::state_machine::DFA::advance] method but does not take a char instead giving it an whitespace
-    /// character
+    /// Similar to the [crate::lexing::state_machine::DFA::advance] method but does not take a char
+    /// instead giving it an whitespace character
     ///
     /// This should be called when at the end of a source file
     pub fn finish(&mut self) -> Option<Token> {

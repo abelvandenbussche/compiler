@@ -104,8 +104,8 @@ impl GrammarMatcher {
                     panic!("Fuck");
                 }
                 let first_token = &tokens[0];
-                println!("{first_token}, {literal}");
-                if first_token.to_string() == *literal {
+                println!("{:?}, {literal}", first_token);
+                if first_token.body == *literal {
                     Some(&tokens[0..1])
                 } else {
                     None
@@ -130,7 +130,6 @@ impl GrammarMatcher {
 #[cfg(test)]
 mod tests {
     use crate::{
-        common::Literal,
         grammar::tree::{GrammarNode, Rule},
         lexing::Token,
         parsing::GrammarMatcher,
@@ -138,9 +137,18 @@ mod tests {
     #[test]
     fn match_tokens_with_rule() {
         let tokens = vec![
-            Token::Literal(Literal::Int(5)),
-            Token::Plus,
-            Token::Literal(Literal::Int(15)),
+            Token {
+                head: "INTEGER".to_owned(),
+                body: "5".to_owned(),
+            },
+            Token {
+                head: "PLUS_OPERATOR".to_owned(),
+                body: "+".to_owned(),
+            },
+            Token {
+                head: "INTEGER".to_owned(),
+                body: "15".to_owned(),
+            },
         ];
         let operator_rule = Rule {
             head: "addition".to_owned(),

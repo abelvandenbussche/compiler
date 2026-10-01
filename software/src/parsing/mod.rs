@@ -70,21 +70,16 @@ impl GrammarMatcher {
         println!("processing rule: {:?}", rule);
         match rule {
             GrammarNode::Sequence(list) => {
-                let mut result = vec![];
                 let mut first_index = 0;
                 for i in list {
                     if let Some(matched_slice) = self.matches(&tokens[first_index..], i) {
-                        for token in matched_slice {
-                            result.push(token);
-                            first_index += matched_slice.len();
-                        }
+                        first_index += matched_slice.len();
                     } else {
                         println!("sequence none");
                         return None;
                     }
                 }
-                // Some(result.as_slice())
-                todo!()
+                Some(&tokens[..first_index])
             }
             GrammarNode::Reference(reference) => {
                 if let Some(new_rule) = self.rules.get(reference) {
@@ -116,6 +111,14 @@ impl GrammarMatcher {
                     None
                 }
             }
+            GrammarNode::ZeroOrMore(internal_rule) => {
+                let mut range = 0;
+                while let Some(v) = self.matches(&tokens[range..], internal_rule) {
+                    println!("looping");
+                    range += v.len()
+                }
+                Some(&tokens[..range])
+            }
             other => {
                 println!("Got here with: ({:?})", other);
                 todo!()
@@ -142,9 +145,9 @@ mod tests {
         let operator_rule = Rule {
             head: "addition".to_owned(),
             body: Some(GrammarNode::Sequence(vec![
-                GrammarNode::Reference("digit".to_owned()),
+                GrammarNode::Reference("integer".to_owned()),
                 GrammarNode::Literal("+".to_owned()),
-                GrammarNode::Reference("digit".to_owned()),
+                GrammarNode::Reference("integer".to_owned()),
             ])),
         };
         let digit_rule = Rule {
@@ -162,8 +165,15 @@ mod tests {
                 GrammarNode::Literal("9".to_owned()),
             ])),
         };
+        let number_rule = Rule {
+            head: "integer".to_owned(),
+            body: Some(GrammarNode::Sequence(vec![
+                GrammarNode::Reference("digit".to_owned()),
+                GrammarNode::ZeroOrMore(Box::new(GrammarNode::Reference("digit".to_owned()))),
+            ])),
+        };
         let operator_nodes = operator_rule.body.clone().unwrap();
-        let matcher = GrammarMatcher::new(vec![operator_rule, digit_rule]);
+        let matcher = GrammarMatcher::new(vec![operator_rule, digit_rule, number_rule]);
         assert_eq!(
             matcher.matches(&tokens, &operator_nodes),
             Some(tokens.as_slice())

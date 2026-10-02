@@ -214,7 +214,4 @@ mod tests {
         };
         assert_eq!(parse_tokens(tokens), expected_rule);
     }
-
-    #[test]
-    fn simple_match() {}
 }

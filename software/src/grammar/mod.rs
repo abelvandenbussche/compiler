@@ -12,14 +12,27 @@ mod lexer;
 pub mod tree;
 pub mod types;
 
-pub fn get_rules() {}
-fn get_tree() -> Vec<Rule> {
+/// Parses the program rules and returns them
+///
+/// # What it returns
+/// It returns a tuple containing the token rules and the grammar rules
+/// where the first value are the token rules and the second are the grammar rules
+fn get_rules() -> (Vec<Rule>, Vec<Rule>) {
     let tokens = lex();
-    let mut rules = vec![];
+    let mut grammar_rules = vec![];
+    let mut token_rules = vec![];
     for i in split_list_on(tokens, Semicolon) {
-        rules.push(parse_tokens(i));
+        let new_rule = parse_tokens(i);
+        let new_rule_head = &new_rule.head;
+        if new_rule_head.to_lowercase() == *new_rule_head {
+            grammar_rules.push(new_rule);
+        } else if new_rule_head.to_uppercase() == *new_rule_head {
+            token_rules.push(new_rule);
+        } else {
+            panic!("Invalid rule head: {new_rule_head}");
+        }
     }
-    rules
+    (token_rules, grammar_rules)
 }
 
 /// Splits the list into multiple lists

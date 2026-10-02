@@ -17,7 +17,7 @@ pub mod types;
 /// # What it returns
 /// It returns a tuple containing the token rules and the grammar rules
 /// where the first value are the token rules and the second are the grammar rules
-fn get_rules() -> (Vec<Rule>, Vec<Rule>) {
+pub fn get_rules() -> (Vec<Rule>, Vec<Rule>) {
     let tokens = lex();
     let mut grammar_rules = vec![];
     let mut token_rules = vec![];

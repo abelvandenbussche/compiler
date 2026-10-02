@@ -1,6 +1,6 @@
 use std::{env::args, fs::File, path::PathBuf};
 
-use crate::lexing::Lexer;
+use crate::{grammar::get_rules, lexing::Lexer};
 
 mod common;
 mod grammar;
@@ -9,11 +9,7 @@ mod lexing;
 mod parsing;
 
 fn main() {
-    let source_file = PathBuf::from(args().nth(1).expect("No argument given"));
-    let mut lexer =
-        Lexer::new(File::open(source_file).expect("Failed to open source file")).unwrap();
-    while let Some(token) = lexer.next_token() {
-        println!("token: {:?}", token);
-    }
-    println!("Done tokening");
+    // let source_file = PathBuf::from(args().nth(1).expect("No argument given"));
+    let rules = get_rules();
+    println!("rules: {:#?}", rules)
 }

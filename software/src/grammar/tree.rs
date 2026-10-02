@@ -35,10 +35,10 @@ pub struct Rule {
 impl Rule {
     fn matches<'a>(
         &self,
-        tokens: &str,
+        tokens: &'a str,
         rule: &GrammarNode,
         rules: &HashMap<String, GrammarNode>,
-    ) -> Option<&str> {
+    ) -> Option<&'a str> {
         println!("processing rule: {:?}", rule);
         match rule {
             GrammarNode::Sequence(list) => {
@@ -305,4 +305,7 @@ mod tests {
         };
         assert_eq!(parse_tokens(tokens), expected_rule);
     }
+
+    #[test]
+    fn simple_match() {}
 }

@@ -1,4 +1,9 @@
-use crate::grammar::types::Rule;
+use std::collections::HashMap;
+
+use crate::grammar::{
+    rules_to_map,
+    types::{GrammarNode, Rule},
+};
 
 use super::Token;
 
@@ -6,7 +11,7 @@ use super::Token;
 /// A state machine that systematically reads characters and changes its state based on it
 pub struct LexerMatcher {
     working_string: String,
-    rules: Vec<Rule>,
+    rules: HashMap<String, GrammarNode>,
 }
 
 // Make a list of valid identifier characters
@@ -29,9 +34,10 @@ const IDENTIFIER_CHARS: [char; 26 * 2 + 1] = {
 impl LexerMatcher {
     /// Create a new DFA instance
     pub fn new(first_char: char, rules: Vec<Rule>) -> Self {
+        let processed_rules = rules_to_map(rules);
         Self {
             working_string: String::new(),
-            rules,
+            rules: processed_rules,
         }
     }
 
@@ -69,14 +75,14 @@ mod tests {
     fn feed_string(string: &str, rules: Vec<Rule>) -> Option<Token> {
         let mut chars_iter = string.chars();
         let first_char = chars_iter.next().unwrap();
-        let mut dfa = LexerMatcher::new(first_char, rules);
+        let mut lex_matcher = LexerMatcher::new(first_char, rules);
         for c in chars_iter {
-            let res = dfa.advance(c);
+            let res = lex_matcher.advance(c);
             if res.is_some() {
                 return res;
             }
         }
-        dfa.finish()
+        lex_matcher.finish()
     }
 
     #[test]

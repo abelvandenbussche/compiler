@@ -48,7 +48,7 @@ where
 }
 
 /// Converts a list of rules to a hashmap for more efficient indexing and finding of rules
-fn rules_to_map(rules: Vec<Rule>) -> HashMap<String, GrammarNode> {
+pub fn rules_to_map(rules: Vec<Rule>) -> HashMap<String, GrammarNode> {
     let mut map = HashMap::new();
     for rule in rules {
         if let Some(node) = rule.body {

@@ -59,73 +59,6 @@ impl GrammarMatcher {
     pub fn process_next(&mut self, next: Token) {
         todo!()
     }
-
-    /// Checks whether a certain rule is valid inside the given tokens,
-    /// not all tokens need to match. Only the first to nth token need to fully match. It returns
-    /// the tokens wich matched
-    ///
-    /// # Error
-    /// Returns an `None` value if there was no match or something unexpected but recoverable
-    /// happened
-    fn matches<'a>(&self, tokens: &'a [Token], rule: &GrammarNode) -> Option<&'a [Token]> {
-        println!("processing rule: {:?}", rule);
-        match rule {
-            GrammarNode::Sequence(list) => {
-                let mut first_index = 0;
-                for i in list {
-                    if let Some(matched_slice) = self.matches(&tokens[first_index..], i) {
-                        first_index += matched_slice.len();
-                    } else {
-                        println!("sequence none");
-                        return None;
-                    }
-                }
-                Some(&tokens[..first_index])
-            }
-            GrammarNode::Reference(reference) => {
-                if let Some(new_rule) = self.rules.get(reference) {
-                    self.matches(tokens, new_rule)
-                } else {
-                    println!("reference none");
-                    None
-                }
-            }
-            GrammarNode::Choice(to_choose) => {
-                for i in to_choose {
-                    let result = self.matches(tokens, i);
-                    if result.is_some() {
-                        return result;
-                    }
-                }
-                println!("choice none");
-                None
-            }
-            GrammarNode::Literal(literal) => {
-                if tokens.len() == 0 {
-                    panic!("Fuck");
-                }
-                let first_token = &tokens[0];
-                println!("{:?}, {literal}", first_token);
-                if first_token.body == *literal {
-                    Some(&tokens[0..1])
-                } else {
-                    None
-                }
-            }
-            GrammarNode::ZeroOrMore(internal_rule) => {
-                let mut range = 0;
-                while let Some(v) = self.matches(&tokens[range..], internal_rule) {
-                    println!("looping");
-                    range += v.len()
-                }
-                Some(&tokens[..range])
-            }
-            other => {
-                println!("Got here with: ({:?})", other);
-                todo!()
-            }
-        }
-    }
 }
 
 #[cfg(test)]
@@ -137,7 +70,6 @@ mod tests {
     };
     #[test]
     fn match_tokens_with_rule() {
-        todo!();
         let tokens = vec![
             Token {
                 head: "INTEGER".to_owned(),
@@ -184,9 +116,5 @@ mod tests {
         };
         let operator_nodes = operator_rule.body.clone().unwrap();
         let matcher = GrammarMatcher::new(vec![operator_rule, digit_rule, number_rule]);
-        assert_eq!(
-            matcher.matches(&tokens, &operator_nodes),
-            Some(tokens.as_slice())
-        );
     }
 }

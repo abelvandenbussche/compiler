@@ -6,7 +6,7 @@ use std::{
     io::{self, BufRead, BufReader, Read},
 };
 
-use crate::{common::Literal, lexing::state_machine::LexerMatcher};
+use crate::lexing::state_machine::LexerMatcher;
 
 mod state_machine;
 

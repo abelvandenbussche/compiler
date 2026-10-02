@@ -62,7 +62,7 @@ pub fn rules_to_map(rules: Vec<Rule>) -> HashMap<String, GrammarNode> {
 /// returns `None` if it did not find a match and `Some` if it did
 ///
 /// If if found a match if returns what part of the string it found to match
-fn matches_rule<'a>(
+pub fn matches_rule<'a>(
     text: &'a str,
     rule: &GrammarNode,
     rules: &HashMap<String, GrammarNode>,

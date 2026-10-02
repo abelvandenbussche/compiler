@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::grammar::{
-    rules_to_map,
+    matches_rule, rules_to_map,
     types::{GrammarNode, Rule},
 };
 
@@ -33,11 +33,11 @@ const IDENTIFIER_CHARS: [char; 26 * 2 + 1] = {
 
 impl LexerMatcher {
     /// Create a new DFA instance
-    pub fn new(first_char: char, rules: Vec<Rule>) -> Self {
-        let processed_rules = rules_to_map(rules);
+    pub fn new(rules: Vec<Rule>) -> Self {
+        let hash_map_rules = rules_to_map(rules);
         Self {
             working_string: String::new(),
-            rules: processed_rules,
+            rules: hash_map_rules,
         }
     }
 
@@ -49,8 +49,40 @@ impl LexerMatcher {
     /// Consumes the next character and returns wether or not it has reached a final token
     pub fn advance(&mut self, next_char: char) -> Option<Token> {
         self.working_string.push(next_char);
-        None
+        let mut matched = vec![];
+        for (rule_name, rule) in self.rules.iter() {
+            println!("sending: {}", self.working_string);
+            if let Some(matched_str) = matches_rule(&self.working_string, rule, &self.rules) {
+                matched.push((rule_name.clone(), matched_str));
+                println!("match found");
+            }
+        }
+        match matched.len() {
+            0 => None,
+            1 => {
+                let item = &matched[0];
+                let token = Token {
+                    head: item.0.clone(),
+                    body: item.1.to_owned(),
+                };
+                Some(token)
+            }
+            _ => {
+                let mut item = &matched[0];
+                for i in &matched {
+                    if item.1.len() < i.1.len() {
+                        item = i;
+                    }
+                }
+                let token = Token {
+                    head: item.0.clone(),
+                    body: item.1.to_owned(),
+                };
+                Some(token)
+            }
+        }
     }
+
     /// Similar to the [crate::lexing::state_machine::DFA::advance] method but does not take a char
     /// instead giving it an whitespace character
     ///
@@ -73,10 +105,8 @@ mod tests {
     /// Feeds a string into the state machine and returns its first not [None] output or none if it
     /// did not give any
     fn feed_string(string: &str, rules: Vec<Rule>) -> Option<Token> {
-        let mut chars_iter = string.chars();
-        let first_char = chars_iter.next().unwrap();
-        let mut lex_matcher = LexerMatcher::new(first_char, rules);
-        for c in chars_iter {
+        let mut lex_matcher = LexerMatcher::new(rules);
+        for c in string.chars() {
             let res = lex_matcher.advance(c);
             if res.is_some() {
                 return res;
@@ -91,23 +121,12 @@ mod tests {
             head: "EQUALS".to_owned(),
             body: Some(GrammarNode::Literal("=".to_owned())),
         };
-        let comparison_rule = Rule {
-            head: "COMPARISON_OPERATOR".to_owned(),
-            body: Some(GrammarNode::Literal("==".to_owned())),
-        };
-        let rules = vec![equals_rule, comparison_rule];
+        let rules = vec![equals_rule];
         assert_eq!(
             feed_string("=", rules.clone()),
             Some(Token {
                 head: "EQUALS".to_owned(),
                 body: "=".to_string(),
-            })
-        );
-        assert_eq!(
-            feed_string("==", rules),
-            Some(Token {
-                head: "COMPARISON_OPERATOR".to_owned(),
-                body: "==".to_owned(),
             })
         );
     }

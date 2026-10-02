@@ -31,14 +31,9 @@ impl Lexer {
         file.read_exact(&mut buf)?;
         // HACK: this should actually contain rules and is just to appease the compiler
         let rules = vec![];
-        let first_char = buf
-            .iter()
-            .map(|e| *e as char)
-            .next()
-            .expect("Failed to take first char");
         Ok(Self {
             reader: BufReader::new(file),
-            dfa: LexerMatcher::new(first_char, rules),
+            dfa: LexerMatcher::new(rules),
             current_line: vec![],
         })
     }

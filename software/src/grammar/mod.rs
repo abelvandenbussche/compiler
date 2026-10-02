@@ -62,8 +62,8 @@ fn rules_to_map(rules: Vec<Rule>) -> HashMap<String, GrammarNode> {
 /// returns `None` if it did not find a match and `Some` if it did
 ///
 /// If if found a match if returns what part of the string it found to match
-fn matches<'a>(
-    tokens: &'a str,
+fn matches_rule<'a>(
+    text: &'a str,
     rule: &GrammarNode,
     rules: &HashMap<String, GrammarNode>,
 ) -> Option<&'a str> {
@@ -72,18 +72,18 @@ fn matches<'a>(
         GrammarNode::Sequence(list) => {
             let mut first_index = 0;
             for i in list {
-                if let Some(matched_slice) = matches(&tokens[first_index..], i, rules) {
+                if let Some(matched_slice) = matches_rule(&text[first_index..], i, rules) {
                     first_index += matched_slice.len();
                 } else {
                     println!("sequence none");
                     return None;
                 }
             }
-            Some(&tokens[..first_index])
+            Some(&text[..first_index])
         }
         GrammarNode::Reference(reference) => {
             if let Some(new_rule) = rules.get(reference) {
-                matches(tokens, new_rule, rules)
+                matches_rule(text, new_rule, rules)
             } else {
                 println!("reference none");
                 None
@@ -91,7 +91,7 @@ fn matches<'a>(
         }
         GrammarNode::Choice(to_choose) => {
             for i in to_choose {
-                let result = matches(tokens, i, rules);
+                let result = matches_rule(text, i, rules);
                 if result.is_some() {
                     return result;
                 }
@@ -100,10 +100,10 @@ fn matches<'a>(
             None
         }
         GrammarNode::Literal(literal) => {
-            if let Some(first_token) = tokens.chars().next() {
+            if let Some(first_token) = text.chars().next() {
                 println!("{:?}, {literal}", first_token);
                 if first_token.to_string() == *literal {
-                    Some(&tokens[0..1])
+                    Some(&text[0..1])
                 } else {
                     None
                 }
@@ -113,11 +113,11 @@ fn matches<'a>(
         }
         GrammarNode::ZeroOrMore(internal_rule) => {
             let mut range = 0;
-            while let Some(v) = matches(&tokens[range..], internal_rule, rules) {
+            while let Some(v) = matches_rule(&text[range..], internal_rule, rules) {
                 println!("looping");
                 range += v.len()
             }
-            Some(&tokens[..range])
+            Some(&text[..range])
         }
         other => {
             println!("Got here with: ({:?})", other);
@@ -129,7 +129,7 @@ fn matches<'a>(
 #[cfg(test)]
 mod tests {
     use crate::grammar::{
-        rules_to_map,
+        matches_rule, rules_to_map,
         types::{GrammarNode, Rule},
     };
 
@@ -169,9 +169,10 @@ mod tests {
     fn simple_matching() {
         let number_rule = Rule {
             head: "NUMBER".to_owned(),
-            body: Some(GrammarNode::Sequence(vec![GrammarNode::Reference(
-                "DIGIT".to_owned(),
-            )])),
+            body: Some(GrammarNode::Sequence(vec![
+                GrammarNode::Reference("DIGIT".to_owned()),
+                GrammarNode::ZeroOrMore(Box::new(GrammarNode::Reference("DIGIT".to_owned()))),
+            ])),
         };
         let digit_rule = Rule {
             head: "DIGIT".to_owned(),
@@ -188,5 +189,22 @@ mod tests {
                 GrammarNode::Literal("9".to_owned()),
             ])),
         };
+        let rules_map = rules_to_map(vec![number_rule, digit_rule]);
+        assert_eq!(
+            matches_rule("123", &rules_map["NUMBER"], &rules_map),
+            Some("123")
+        );
+        assert_eq!(
+            matches_rule("123hello world", &rules_map["NUMBER"], &rules_map),
+            Some("123")
+        );
+        assert_eq!(
+            matches_rule("he5llo world123", &rules_map["NUMBER"], &rules_map),
+            None
+        );
+        assert_eq!(
+            matches_rule("123 50", &rules_map["NUMBER"], &rules_map),
+            Some("123")
+        );
     }
 }

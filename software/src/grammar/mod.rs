@@ -128,7 +128,10 @@ fn matches<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::grammar::types::{GrammarNode, Rule};
+    use crate::grammar::{
+        rules_to_map,
+        types::{GrammarNode, Rule},
+    };
 
     use super::split_list_on;
     #[test]
@@ -142,6 +145,25 @@ mod tests {
         // Non-splitting
         let list2 = vec![1, 2, 3];
         assert_eq!(split_list_on(list2, 4), vec![vec![1, 2, 3]]);
+    }
+    #[test]
+    fn rules_to_hash_conversion() {
+        let rules = vec![
+            Rule {
+                head: "TEST".to_owned(),
+                body: None,
+            },
+            Rule {
+                head: "foo".to_owned(),
+                body: Some(GrammarNode::Literal("bar".to_owned())),
+            },
+        ];
+        let hashmap = rules_to_map(rules);
+        assert_eq!(hashmap.get("TEST"), None);
+        assert_eq!(
+            hashmap.get("foo"),
+            Some(&GrammarNode::Literal("bar".to_owned()))
+        );
     }
     #[test]
     fn simple_matching() {

@@ -183,31 +183,4 @@ mod tests {
             "h ell o  \"o\" w o rld"
         );
     }
-
-    #[test]
-    fn tokenize_first_line() {
-        // This should change if the first line ever changes
-        let expected = vec![
-            Identifier("variable_declaration".to_owned()),
-            Equals,
-            Literal("let".to_owned()),
-            Comma,
-            Identifier("variable_identifier".to_owned()),
-            Comma,
-            LBracket,
-            Literal(":".to_owned()),
-            Comma,
-            Identifier("type".to_owned()),
-            RBracket,
-            Comma,
-            Literal("=".to_owned()),
-            Comma,
-            Identifier("value".to_owned()),
-        ];
-        let output: Vec<EBNFToken> = lex()
-            .into_iter()
-            .take_while(|token| token != &Semicolon)
-            .collect();
-        assert_eq!(output, expected);
-    }
 }

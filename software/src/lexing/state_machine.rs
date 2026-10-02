@@ -1,7 +1,6 @@
-use crate::{grammar::tree::Rule, lexing::Literal};
+use crate::grammar::types::Rule;
 
 use super::Token;
-use std::str::FromStr;
 
 /// ## Deterministic Finite Automaton ≈ Finite state machine
 /// A state machine that systematically reads characters and changes its state based on it
@@ -59,7 +58,7 @@ impl LexerMatcher {
 #[cfg(test)]
 mod tests {
 
-    use crate::grammar::tree::{GrammarNode, Rule};
+    use crate::grammar::types::{GrammarNode, Rule};
 
     use super::super::Token;
     use super::LexerMatcher;

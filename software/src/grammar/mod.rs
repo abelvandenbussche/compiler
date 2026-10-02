@@ -3,11 +3,13 @@
 
 use crate::grammar::{
     lexer::{EBNFToken::Semicolon, lex},
-    tree::{Rule, parse_tokens},
+    tree::parse_tokens,
+    types::Rule,
 };
 
 mod lexer;
 pub mod tree;
+pub mod types;
 
 pub fn get_rules() {}
 fn get_tree() -> Vec<Rule> {

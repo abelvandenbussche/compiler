@@ -3,9 +3,10 @@
 
 use std::collections::HashMap;
 
-use crate::grammar::tree::GrammarNode;
-
-use super::{grammar::tree::Rule, lexing::Token};
+use super::{
+    grammar::types::{GrammarNode, Rule},
+    lexing::Token,
+};
 
 /// Represents the combination of the `grammar` rules to the `Lexer` tokens
 enum MatchNode {
@@ -130,7 +131,7 @@ impl GrammarMatcher {
 #[cfg(test)]
 mod tests {
     use crate::{
-        grammar::tree::{GrammarNode, Rule},
+        grammar::types::{GrammarNode, Rule},
         lexing::Token,
         parsing::GrammarMatcher,
     };

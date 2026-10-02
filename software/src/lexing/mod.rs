@@ -2,7 +2,6 @@
 //! the [crate::parsing]
 
 use std::{
-    fmt::Display,
     fs::File,
     io::{self, BufRead, BufReader, Read},
 };

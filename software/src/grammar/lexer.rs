@@ -52,6 +52,10 @@ pub fn lex() -> Vec<EBNFToken> {
             }
             continue;
         }
+        // Don't include whitespace characters except for spaces
+        if c.is_whitespace() && c != ' ' {
+            continue;
+        }
         let result = match c {
             '[' => Some(LBracket),
             ']' => Some(RBracket),

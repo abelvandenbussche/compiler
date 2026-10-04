@@ -78,7 +78,7 @@ pub fn rules_to_map(rules: Vec<Rule>) -> HashMap<String, GrammarNode> {
     map
 }
 
-/// Checks whether a certain string matches a given rules
+/// Checks whether a certain string matches a given rule
 /// returns `None` if it did not find a match and `Some` if it did
 ///
 /// If if found a match if returns what part of the string it found to match
@@ -87,7 +87,6 @@ pub fn matches_rule<'a>(
     rule: &GrammarNode,
     rules: &HashMap<String, GrammarNode>,
 ) -> Option<&'a str> {
-    println!("processing rule: {:?}", rule);
     match rule {
         GrammarNode::Sequence(list) => {
             let mut first_index = 0;
@@ -95,7 +94,6 @@ pub fn matches_rule<'a>(
                 if let Some(matched_slice) = matches_rule(&text[first_index..], i, rules) {
                     first_index += matched_slice.len();
                 } else {
-                    println!("sequence none");
                     return None;
                 }
             }
@@ -105,7 +103,6 @@ pub fn matches_rule<'a>(
             if let Some(new_rule) = rules.get(reference) {
                 matches_rule(text, new_rule, rules)
             } else {
-                println!("reference none");
                 None
             }
         }
@@ -116,7 +113,6 @@ pub fn matches_rule<'a>(
                     return result;
                 }
             }
-            println!("choice none");
             None
         }
         GrammarNode::Literal(literal) => {

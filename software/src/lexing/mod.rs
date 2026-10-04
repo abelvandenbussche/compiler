@@ -29,7 +29,6 @@ impl Lexer {
     pub fn new(mut file: File, lexing_rules: Vec<Rule>) -> io::Result<Self> {
         let mut buf: [u8; 1] = [0];
         file.read_exact(&mut buf)?;
-        // HACK: this should actually contain rules and is just to appease the compiler
         Ok(Self {
             reader: BufReader::new(file),
             dfa: LexerMatcher::new(lexing_rules),
@@ -38,18 +37,7 @@ impl Lexer {
     }
     /// Lexes the next token
     pub fn next_token(&mut self) -> Option<Token> {
-        loop {
-            if let Some(next_char) = self.next_char() {
-                let result = self.dfa.advance(next_char);
-                if let Some(token) = result {
-                    self.dfa.reset();
-                    return Some(token);
-                }
-            } else {
-                break;
-            }
-        }
-        self.dfa.finish()
+        todo!()
     }
 
     /// Returns the next character of the file

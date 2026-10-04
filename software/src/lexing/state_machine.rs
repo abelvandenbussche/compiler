@@ -1,16 +1,13 @@
 use std::collections::HashMap;
 
 use crate::grammar::{
-    matches_rule, rules_to_map,
+    rules_to_map,
     types::{GrammarNode, Rule},
 };
-
-use super::Token;
 
 /// ## Deterministic Finite Automaton ≈ Finite state machine
 /// A state machine that systematically reads characters and changes its state based on it
 pub struct LexerMatcher {
-    working_string: String,
     rules: HashMap<String, GrammarNode>,
 }
 
@@ -36,98 +33,14 @@ impl LexerMatcher {
     pub fn new(rules: Vec<Rule>) -> Self {
         let hash_map_rules = rules_to_map(rules);
         Self {
-            working_string: String::new(),
             rules: hash_map_rules,
         }
     }
 
-    /// Resets the state machine to its original state and clears its read string
-    pub fn reset(&mut self) {
-        self.working_string = String::new();
-    }
-
-    /// Consumes the next character and returns wether or not it has reached a final token
-    pub fn advance(&mut self, next_char: char) -> Option<Token> {
-        self.working_string.push(next_char);
-        let mut matched = vec![];
-        for (rule_name, rule) in self.rules.iter() {
-            println!("sending: {}", self.working_string);
-            if let Some(matched_str) = matches_rule(&self.working_string, rule, &self.rules) {
-                matched.push((rule_name.clone(), matched_str));
-                println!("match found");
-            }
-        }
-        match matched.len() {
-            0 => None,
-            1 => {
-                let item = &matched[0];
-                let token = Token {
-                    head: item.0.clone(),
-                    body: item.1.to_owned(),
-                };
-                Some(token)
-            }
-            _ => {
-                let mut item = &matched[0];
-                for i in &matched {
-                    if item.1.len() < i.1.len() {
-                        item = i;
-                    }
-                }
-                let token = Token {
-                    head: item.0.clone(),
-                    body: item.1.to_owned(),
-                };
-                Some(token)
-            }
-        }
-    }
-
-    /// Similar to the [crate::lexing::state_machine::DFA::advance] method but does not take a char
-    /// instead giving it an whitespace character
-    ///
-    /// This should be called when at the end of a source file
-    pub fn finish(&mut self) -> Option<Token> {
-        self.advance(' ')
-    }
+    /// Finds the next best match using a greedy algorithm
+    pub fn next_best_match(&self, working_string: String) {}
 }
 
 /// These tests focus on the capability to identify single tokens
 #[cfg(test)]
-mod tests {
-
-    use crate::grammar::types::{GrammarNode, Rule};
-
-    use super::super::Token;
-    use super::LexerMatcher;
-
-    /// A helper function to test the state machine\
-    /// Feeds a string into the state machine and returns its first not [None] output or none if it
-    /// did not give any
-    fn feed_string(string: &str, rules: Vec<Rule>) -> Option<Token> {
-        let mut lex_matcher = LexerMatcher::new(rules);
-        for c in string.chars() {
-            let res = lex_matcher.advance(c);
-            if res.is_some() {
-                return res;
-            }
-        }
-        lex_matcher.finish()
-    }
-
-    #[test]
-    fn very_simple_lexing() {
-        let equals_rule = Rule {
-            head: "EQUALS".to_owned(),
-            body: Some(GrammarNode::Literal("=".to_owned())),
-        };
-        let rules = vec![equals_rule];
-        assert_eq!(
-            feed_string("=", rules.clone()),
-            Some(Token {
-                head: "EQUALS".to_owned(),
-                body: "=".to_string(),
-            })
-        );
-    }
-}
+mod tests {}

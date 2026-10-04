@@ -6,7 +6,7 @@ use crate::grammar::{
     tree::parse_tokens,
     types::{GrammarNode, Rule},
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, fs::File, io::Read};
 
 mod lexer;
 pub mod tree;
@@ -17,8 +17,15 @@ pub mod types;
 /// # What it returns
 /// It returns a tuple containing the token rules and the grammar rules
 /// where the first value are the token rules and the second are the grammar rules
-pub fn get_rules() -> (Vec<Rule>, Vec<Rule>) {
-    let tokens = lex();
+///
+/// It takes in a grammar file from wich it will read and parse the grammar
+pub fn get_rules(mut grammar_file: File) -> (Vec<Rule>, Vec<Rule>) {
+    // Reading the ebnf
+    let mut ebnf = String::new();
+    let _bytes_read = grammar_file
+        .read_to_string(&mut ebnf)
+        .expect("Failed to read grammar file");
+    let tokens = lex(ebnf);
     let mut grammar_rules = vec![];
     let mut token_rules = vec![];
     for i in split_list_on(tokens, Semicolon) {

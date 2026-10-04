@@ -1,5 +1,4 @@
 use EBNFToken::*;
-const EBNF: &str = include_str!("../../../docs/grammar.ebnf");
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum EBNFToken {
@@ -30,10 +29,10 @@ pub enum EBNFToken {
 }
 
 /// Lexes the EBNF into a sequence of tokens
-pub fn lex() -> Vec<EBNFToken> {
+pub fn lex(ebnf: String) -> Vec<EBNFToken> {
     // Preprocessing
     const SPECIAL_CHARS: [char; 10] = ['[', ']', '(', ')', '{', '}', '=', ',', ';', '|'];
-    let processed_ebnf = space_special_chars(EBNF, &SPECIAL_CHARS);
+    let processed_ebnf = space_special_chars(&ebnf, &SPECIAL_CHARS);
 
     // Parsing
     let mut tokens = vec![];

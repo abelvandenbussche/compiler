@@ -6,7 +6,7 @@ use std::{
     io::{self, BufRead, BufReader, Read},
 };
 
-use crate::lexing::state_machine::LexerMatcher;
+use crate::{grammar::types::Rule, lexing::state_machine::LexerMatcher};
 
 mod state_machine;
 
@@ -26,14 +26,13 @@ pub struct Lexer {
 }
 impl Lexer {
     /// Creates a new lexer
-    pub fn new(mut file: File) -> io::Result<Self> {
+    pub fn new(mut file: File, lexing_rules: Vec<Rule>) -> io::Result<Self> {
         let mut buf: [u8; 1] = [0];
         file.read_exact(&mut buf)?;
         // HACK: this should actually contain rules and is just to appease the compiler
-        let rules = vec![];
         Ok(Self {
             reader: BufReader::new(file),
-            dfa: LexerMatcher::new(rules),
+            dfa: LexerMatcher::new(lexing_rules),
             current_line: vec![],
         })
     }

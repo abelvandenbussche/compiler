@@ -9,7 +9,7 @@ mod lexing;
 mod parsing;
 
 fn main() {
-    // let source_file = PathBuf::from(args().nth(1).expect("No argument given"));
-    let rules = get_rules();
-    println!("rules: {:#?}", rules)
+    let source_file = PathBuf::from(args().nth(1).expect("No argument given"));
+    let (lexing_rule, grammar_rule) = get_rules();
+    let lexer = Lexer::new(File::open(source_file).expect("Failed to open file"));
 }

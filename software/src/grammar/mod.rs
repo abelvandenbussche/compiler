@@ -19,12 +19,7 @@ pub mod types;
 /// where the first value are the token rules and the second are the grammar rules
 ///
 /// It takes in a grammar file from wich it will read and parse the grammar
-pub fn get_rules(mut grammar_file: File) -> (Vec<Rule>, Vec<Rule>) {
-    // Reading the ebnf
-    let mut ebnf = String::new();
-    let _bytes_read = grammar_file
-        .read_to_string(&mut ebnf)
-        .expect("Failed to read grammar file");
+pub fn get_rules(ebnf: String) -> (Vec<Rule>, Vec<Rule>) {
     let tokens = lex(ebnf);
     let mut grammar_rules = vec![];
     let mut token_rules = vec![];
@@ -125,7 +120,6 @@ pub fn matches_rule<'a>(
         GrammarNode::ZeroOrMore(internal_rule) => {
             let mut range = 0;
             while let Some(v) = matches_rule(&text[range..], internal_rule, rules) {
-                println!("looping");
                 range += v.len()
             }
             Some(&text[..range])

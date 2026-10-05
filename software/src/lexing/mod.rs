@@ -22,42 +22,24 @@ pub struct Token {
 /// A lexer that can emit a stream of tokens instead of loading a full files worth of tokens in to
 /// memory
 pub struct Lexer {
-    reader: BufReader<File>,
     dfa: LexerMatcher,
-    current_line: Vec<char>,
+    file_contents: String,
 }
 impl Lexer {
     /// Creates a new lexer
-    pub fn new(mut file: File, lexing_rules: Vec<Rule>) -> io::Result<Self> {
-        let mut buf: [u8; 1] = [0];
-        file.read_exact(&mut buf)?;
+    pub fn new(mut file_contents: String, lexing_rules: Vec<Rule>) -> io::Result<Self> {
         Ok(Self {
-            reader: BufReader::new(file),
             dfa: LexerMatcher::new(lexing_rules),
-            current_line: vec![],
+            file_contents,
         })
     }
     /// Lexes the next token
     pub fn next_token(&mut self) -> Option<Token> {
-        todo!()
-    }
-
-    /// Returns the next character of the file
-    fn next_char(&mut self) -> Option<char> {
-        if self.current_line.len() == 0 {
-            let mut new_line = String::new();
-            let result = self
-                .reader
-                .read_line(&mut new_line)
-                .expect("Failed to read file");
-            if result == 0 {
-                // Probably eof
-                return None;
-            }
-            self.current_line = new_line.chars().collect();
+        let next_token = self.dfa.next_best_match(&self.file_contents);
+        if let Some(token) = &next_token {
+            self.file_contents = self.file_contents[token.body.len()..].to_owned();
         }
-        // Returning the next char
-        Some(self.current_line.remove(0))
+        next_token
     }
 }
 /// Internal test module for tokenizing

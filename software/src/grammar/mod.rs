@@ -116,13 +116,8 @@ pub fn matches_rule<'a>(
             None
         }
         GrammarNode::Literal(literal) => {
-            if let Some(first_token) = text.chars().next() {
-                println!("{:?}, {literal}", first_token);
-                if first_token.to_string() == *literal {
-                    Some(&text[0..1])
-                } else {
-                    None
-                }
+            if text.starts_with(literal) {
+                Some(&text[0..literal.len()])
             } else {
                 None
             }
@@ -179,6 +174,18 @@ mod tests {
         assert_eq!(
             hashmap.get("foo"),
             Some(&GrammarNode::Literal("bar".to_owned()))
+        );
+    }
+    #[test]
+    fn literal_matching() {
+        let literal_rule = Rule {
+            head: "IF_KEYWORD".to_owned(),
+            body: Some(GrammarNode::Literal("if".to_owned())),
+        };
+        let rules_map = rules_to_map(vec![literal_rule]);
+        assert_eq!(
+            matches_rule("if true then", &rules_map["IF_KEYWORD"], &rules_map),
+            Some("if")
         );
     }
     #[test]

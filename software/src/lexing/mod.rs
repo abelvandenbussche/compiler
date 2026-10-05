@@ -13,7 +13,9 @@ mod state_machine;
 #[derive(Debug, PartialEq)]
 /// A token that represents a match between characters and a rule
 pub struct Token {
+    /// Rule name
     pub head: String,
+    /// Matched part
     pub body: String,
 }
 

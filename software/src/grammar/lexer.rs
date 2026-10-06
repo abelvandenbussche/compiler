@@ -71,7 +71,7 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
                 None
             }
             ' ' => {
-                if in_progress.len() > 0 {
+                if !in_progress.is_empty() {
                     // The end of a identifier
                     let done = Identifier(in_progress);
                     in_progress = String::new();
@@ -126,7 +126,7 @@ fn space_special_chars(original: &str, specials: &[char]) -> String {
             processed.push(c);
             continue;
         }
-        if processed.len() > 0
+        if !processed.is_empty()
             && let Some(prev) = index_string(&processed, processed.len() - 1)
             && prev != ' '
         {
@@ -139,7 +139,7 @@ fn space_special_chars(original: &str, specials: &[char]) -> String {
     processed
 }
 fn index_string(str: &str, index: usize) -> Option<char> {
-    str.chars().skip(index).next()
+    str.chars().nth(index)
 }
 
 #[cfg(test)]

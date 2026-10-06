@@ -56,7 +56,7 @@ where
         new_list.push(i);
     }
     // Adding the final list
-    if new_list.len() > 0 {
+    if !new_list.is_empty() {
         list_of_lists.push(new_list);
     }
     list_of_lists

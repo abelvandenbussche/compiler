@@ -1,10 +1,7 @@
 //! This module converts the characters read from a file into tokens that are more easily parsed by
 //! the [crate::parsing]
 
-use std::{
-    fs::File,
-    io::{self, BufRead, BufReader, Read},
-};
+use std::io::{self};
 
 use crate::{grammar::types::Rule, lexing::state_machine::LexerMatcher};
 

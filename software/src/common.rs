@@ -19,7 +19,7 @@ impl Display for Literal {
             Self::Float(float) => &float.to_string(),
             Self::Int(int) => &int.to_string(),
             Self::Char(c) => &c.to_string(),
-            Self::String(s) => &s,
+            Self::String(s) => s,
         };
         f.write_str(string)
     }

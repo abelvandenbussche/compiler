@@ -12,7 +12,7 @@ use super::lexer::EBNFToken;
 pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> Rule {
     // A rule should always start with an identifier
     let body_tokens = tokens.split_off(tokens.iter().position(|i| *i == Equals).unwrap());
-    let rule = match tokens.into_iter().next() {
+    match tokens.into_iter().next() {
         Some(EBNFToken::Identifier(s)) => Rule {
             head: s,
             // Also removes the leading equals
@@ -20,8 +20,7 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> Rule {
         },
         Some(other) => panic!("Unexpected token: {:?}", other),
         None => panic!("Slice does not contain any elements"),
-    };
-    rule
+    }
 }
 
 /// Takes in a stream of tokens and uses it to generate a `GrammarNode` that is the body of a rule
@@ -29,64 +28,60 @@ fn generate_rule_body(token_stream: &[EBNFToken]) -> GrammarNode {
     let mut nodes = vec![];
     let mut token_iter = token_stream.iter().enumerate();
     let mut choosing = false;
-    loop {
-        if let Some((idx, token)) = token_iter.next() {
-            let result = match token {
-                LBrace | LBracket | LParentheses => {
-                    if let Some(match_location) = find_matching_delimiter(idx, &token_stream) {
-                        let contained_slice = &token_stream[idx + 1..match_location];
-                        let result = generate_rule_body(contained_slice);
-                        let product = match token {
-                            LBrace => ZeroOrMore(Box::new(result)),
-                            LBracket => Optional(Box::new(result)),
-                            LParentheses => Grouping(Box::new(result)),
-                            _ => unreachable!(),
-                        };
-                        // Skipping to the end of the slice in the current iterator
-                        for _ in idx..match_location {
-                            let _ = token_iter.next();
-                        }
-                        Some(product)
-                    } else {
-                        panic!("Non matching delimiter at {idx} in {:?}", token_stream);
+    while let Some((idx, token)) = token_iter.next() {
+        let result = match token {
+            LBrace | LBracket | LParentheses => {
+                if let Some(match_location) = find_matching_delimiter(idx, token_stream) {
+                    let contained_slice = &token_stream[idx + 1..match_location];
+                    let result = generate_rule_body(contained_slice);
+                    let product = match token {
+                        LBrace => ZeroOrMore(Box::new(result)),
+                        LBracket => Optional(Box::new(result)),
+                        LParentheses => Grouping(Box::new(result)),
+                        _ => unreachable!(),
+                    };
+                    // Skipping to the end of the slice in the current iterator
+                    for _ in idx..match_location {
+                        let _ = token_iter.next();
                     }
-                }
-                Literal(s) => Some(GrammarNode::Literal(s.clone())),
-                Identifier(s) => Some(Reference(s.clone())),
-                Pipe => {
-                    choosing = true;
-                    // Moving the last node into this one
-                    if let Some(last_node) = nodes.pop() {
-                        // Check if we are already building a choice
-                        if let GrammarNode::Choice(_) = last_node {
-                            Some(last_node)
-                        } else {
-                            Some(Choice(vec![last_node]))
-                        }
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
-            };
-
-            if let Some(node) = result {
-                // Checking if the last element is a choice or not
-                let possible_last = nodes.pop();
-                if choosing && let Some(Choice(mut choice_list)) = possible_last {
-                    choice_list.push(node);
-                    choosing = false;
-                    nodes.push(Choice(choice_list));
+                    Some(product)
                 } else {
-                    // Re-add the last element if needed
-                    if let Some(last_node) = possible_last {
-                        nodes.push(last_node);
-                    }
-                    nodes.push(node);
+                    panic!("Non matching delimiter at {idx} in {:?}", token_stream);
                 }
             }
-        } else {
-            break;
+            Literal(s) => Some(GrammarNode::Literal(s.clone())),
+            Identifier(s) => Some(Reference(s.clone())),
+            Pipe => {
+                choosing = true;
+                // Moving the last node into this one
+                if let Some(last_node) = nodes.pop() {
+                    // Check if we are already building a choice
+                    if let GrammarNode::Choice(_) = last_node {
+                        Some(last_node)
+                    } else {
+                        Some(Choice(vec![last_node]))
+                    }
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        };
+
+        if let Some(node) = result {
+            // Checking if the last element is a choice or not
+            let possible_last = nodes.pop();
+            if choosing && let Some(Choice(mut choice_list)) = possible_last {
+                choice_list.push(node);
+                choosing = false;
+                nodes.push(Choice(choice_list));
+            } else {
+                // Re-add the last element if needed
+                if let Some(last_node) = possible_last {
+                    nodes.push(last_node);
+                }
+                nodes.push(node);
+            }
         }
     }
     match nodes.len() {

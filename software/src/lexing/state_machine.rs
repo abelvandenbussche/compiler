@@ -8,28 +8,10 @@ use crate::{
     lexing::Token,
 };
 
-/// ## Deterministic Finite Automaton ≈ Finite state machine
-/// A state machine that systematically reads characters and changes its state based on it
+/// A matcher that checks against every rule in its collection and returns the best fitting match
 pub struct LexerMatcher {
     rules: HashMap<String, GrammarNode>,
 }
-
-// Make a list of valid identifier characters
-// This list does not include numbers because numbers are not valid as the first character
-const IDENTIFIER_CHARS: [char; 26 * 2 + 1] = {
-    let mut arr = [' '; 53];
-    let mut i = 0;
-    while i < 26 {
-        let c = (b'a' + i as u8) as char;
-        // Lowercase
-        arr[i] = c;
-        // Uppercase
-        arr[i + 26] = c.to_ascii_uppercase();
-        i += 1;
-    }
-    arr[52] = '_';
-    arr
-};
 
 impl LexerMatcher {
     /// Create a new DFA instance
@@ -70,7 +52,6 @@ impl LexerMatcher {
     }
 }
 
-/// These tests focus on the capability to identify single tokens
 #[cfg(test)]
 mod tests {
     use crate::{

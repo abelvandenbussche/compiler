@@ -19,20 +19,20 @@ pub struct Token {
 /// A lexer that can emit a stream of tokens instead of loading a full files worth of tokens in to
 /// memory
 pub struct Lexer {
-    dfa: LexerMatcher,
+    matcher: LexerMatcher,
     file_contents: String,
 }
 impl Lexer {
     /// Creates a new lexer
-    pub fn new(mut file_contents: String, lexing_rules: Vec<Rule>) -> io::Result<Self> {
-        Ok(Self {
-            dfa: LexerMatcher::new(lexing_rules),
+    pub fn new(file_contents: String, lexing_rules: Vec<Rule>) -> Self {
+        Self {
+            matcher: LexerMatcher::new(lexing_rules),
             file_contents,
-        })
+        }
     }
     /// Lexes the next token
     pub fn next_token(&mut self) -> Option<Token> {
-        let next_token = self.dfa.next_best_match(&self.file_contents);
+        let next_token = self.matcher.next_best_match(&self.file_contents);
         if let Some(token) = &next_token {
             self.file_contents = self.file_contents[token.body.len()..].to_owned();
         }

@@ -1,8 +1,6 @@
 //! This module converts the characters read from a file into tokens that are more easily parsed by
 //! the [crate::parsing]
 
-use std::io::{self};
-
 use crate::{grammar::types::Rule, lexing::state_machine::LexerMatcher};
 
 mod state_machine;
@@ -70,6 +68,7 @@ mod tests {
                 GrammarNode::Literal("o".to_owned()),
                 GrammarNode::Literal("p".to_owned()),
                 GrammarNode::Literal("q".to_owned()),
+                GrammarNode::Literal("r".to_owned()),
                 GrammarNode::Literal("s".to_owned()),
                 GrammarNode::Literal("t".to_owned()),
                 GrammarNode::Literal("u".to_owned()),
@@ -78,6 +77,7 @@ mod tests {
                 GrammarNode::Literal("x".to_owned()),
                 GrammarNode::Literal("y".to_owned()),
                 GrammarNode::Literal("z".to_owned()),
+                GrammarNode::Literal(" ".to_owned()),
             ])),
         };
         let string_rule = Rule {
@@ -89,7 +89,7 @@ mod tests {
             ])),
         };
         let rules = vec![char_rule, string_rule];
-        let contents = "\"hello world\"\"testing\"".to_owned();
+        let contents = "\"hello world\"\"abcdefghijklmnopqrstuvwxyz\"".to_owned();
         let mut lexer = Lexer::new(contents, rules);
         let mut tokens = vec![];
         while let Some(token) = lexer.next_token() {
@@ -104,7 +104,7 @@ mod tests {
                 },
                 Token {
                     head: "STRING".to_owned(),
-                    body: "\"testing\"".to_owned(),
+                    body: "\"abcdefghijklmnopqrstuvwxyz\"".to_owned(),
                 }
             ]
         );

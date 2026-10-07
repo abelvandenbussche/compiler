@@ -42,4 +42,71 @@ impl Lexer {
 /// Internal test module for tokenizing
 /// These focus on files and the larger whole rather than individual token lexing
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use crate::{
+        grammar::types::{GrammarNode, Rule},
+        lexing::{Lexer, Token},
+    };
+
+    #[test]
+    fn simple_lexing() {
+        let char_rule = Rule {
+            head: "CHAR".to_owned(),
+            body: Some(crate::grammar::types::GrammarNode::Choice(vec![
+                GrammarNode::Literal("a".to_owned()),
+                GrammarNode::Literal("b".to_owned()),
+                GrammarNode::Literal("c".to_owned()),
+                GrammarNode::Literal("d".to_owned()),
+                GrammarNode::Literal("e".to_owned()),
+                GrammarNode::Literal("f".to_owned()),
+                GrammarNode::Literal("g".to_owned()),
+                GrammarNode::Literal("h".to_owned()),
+                GrammarNode::Literal("i".to_owned()),
+                GrammarNode::Literal("j".to_owned()),
+                GrammarNode::Literal("k".to_owned()),
+                GrammarNode::Literal("l".to_owned()),
+                GrammarNode::Literal("m".to_owned()),
+                GrammarNode::Literal("n".to_owned()),
+                GrammarNode::Literal("o".to_owned()),
+                GrammarNode::Literal("p".to_owned()),
+                GrammarNode::Literal("q".to_owned()),
+                GrammarNode::Literal("s".to_owned()),
+                GrammarNode::Literal("t".to_owned()),
+                GrammarNode::Literal("u".to_owned()),
+                GrammarNode::Literal("v".to_owned()),
+                GrammarNode::Literal("w".to_owned()),
+                GrammarNode::Literal("x".to_owned()),
+                GrammarNode::Literal("y".to_owned()),
+                GrammarNode::Literal("z".to_owned()),
+            ])),
+        };
+        let string_rule = Rule {
+            head: "STRING".to_owned(),
+            body: Some(crate::grammar::types::GrammarNode::Sequence(vec![
+                GrammarNode::Literal("\"".to_owned()),
+                GrammarNode::ZeroOrMore(Box::new(GrammarNode::Reference("CHAR".to_owned()))),
+                GrammarNode::Literal("\"".to_owned()),
+            ])),
+        };
+        let rules = vec![char_rule, string_rule];
+        let contents = "\"hello world\"\"testing\"".to_owned();
+        let mut lexer = Lexer::new(contents, rules);
+        let mut tokens = vec![];
+        while let Some(token) = lexer.next_token() {
+            tokens.push(token);
+        }
+        assert_eq!(
+            tokens,
+            vec![
+                Token {
+                    head: "STRING".to_owned(),
+                    body: "\"hello world\"".to_owned()
+                },
+                Token {
+                    head: "STRING".to_owned(),
+                    body: "\"testing\"".to_owned(),
+                }
+            ]
+        );
+    }
+}

@@ -124,9 +124,13 @@ pub fn matches_rule<'a>(
             }
             Some(&text[..range])
         }
-        other => {
-            println!("Got here with: ({:?})", other);
-            todo!()
+        GrammarNode::Optional(option) => {
+            // TODO:
+            todo!();
+        }
+        GrammarNode::Grouping(group) => {
+            // TODO:
+            todo!();
         }
     }
 }
@@ -222,6 +226,43 @@ mod tests {
         assert_eq!(
             matches_rule("123 50", &rules_map["NUMBER"], &rules_map),
             Some("123")
+        );
+    }
+    #[test]
+    fn handle_grouping() {
+        let rule_with_grouping = Rule {
+            head: "GROUPING".to_owned(),
+            body: Some(GrammarNode::Grouping(Box::new(GrammarNode::Sequence(
+                vec![
+                    GrammarNode::Literal("Hello".to_owned()),
+                    GrammarNode::Literal(" World".to_owned()),
+                ],
+            )))),
+        };
+        let rule_map = rules_to_map(vec![rule_with_grouping]);
+        assert_eq!(
+            matches_rule("Hello World", &rule_map["GROUPING"], &rule_map),
+            Some("Hello World")
+        );
+    }
+    #[test]
+    fn handle_optional() {
+        let optional_rule = Rule {
+            head: "OPTIONAL".to_owned(),
+            body: Some(GrammarNode::Sequence(vec![
+                GrammarNode::Literal("Hello ".to_owned()),
+                GrammarNode::Optional(Box::new(GrammarNode::Literal("Rust ".to_owned()))),
+                GrammarNode::Literal("World".to_owned()),
+            ])),
+        };
+        let rule_map = rules_to_map(vec![optional_rule]);
+        assert_eq!(
+            matches_rule("Hello Rust World", &rule_map["OPTIONAL"], &rule_map,),
+            Some("Hello Rust World")
+        );
+        assert_eq!(
+            matches_rule("Hello World", &rule_map["OPTIONAL"], &rule_map,),
+            Some("Hello World")
         );
     }
 }

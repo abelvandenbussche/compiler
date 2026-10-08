@@ -1,187 +1,96 @@
 //! This module converts the characters read from a file into tokens that are more easily parsed by
 //! the [crate::parsing]
 
-use std::{
-    fmt::Display,
-    fs::File,
-    io::{self, BufRead, BufReader, Read},
-    str::FromStr,
-};
-
-use crate::{
-    common::Literal,
-    lexing::{ReservedKeyword::*, state_machine::DFA},
-};
+use crate::{grammar::types::Rule, lexing::state_machine::LexerMatcher};
 
 mod state_machine;
 
 #[derive(Debug, PartialEq)]
-pub enum Token {
-    /// Things like variable or function names
-    Identifier(String),
-    /// Reserved keywords like "for" or "while"
-    Keyword(ReservedKeyword),
-    /// Any literal
-    Literal(Literal),
-    /// ==
-    EqualsEquals,
-    /// =
-    Equals,
-    /// {
-    LBrace,
-    /// }
-    RBrace,
-    /// [
-    LBracket,
-    /// ]
-    RBracket,
-    /// (
-    LParentheses,
-    /// )
-    RParentheses,
-    /// ;
-    Semicolon,
-    /// :
-    Colon,
-    /// +
-    Plus,
-    /// -
-    Minus,
-    /// *
-    MultiplicationSign,
-    /// /
-    DivisionSign,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum ReservedKeyword {
-    Function,
-    VariableDeclaration,
-    While,
-    For,
-    Return,
-    If,
-    Else,
-}
-
-// Allows for the conversion from enum member to string
-// This automatically implements the ToString trait and thus allows conversion to String
-impl Display for ReservedKeyword {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let output = match self {
-            Self::Function => "fn",
-            VariableDeclaration => "let",
-            While => "while",
-            For => "for",
-            Return => "return",
-            If => "if",
-            Else => "else",
-        };
-        f.write_str(output)
-    }
-}
-
-// Allow for the conversion from string to keyword enum member
-impl FromStr for ReservedKeyword {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "fn" => Ok(Self::Function),
-            "let" => Ok(VariableDeclaration),
-            "while" => Ok(While),
-            "for" => Ok(For),
-            "return" => Ok(Return),
-            "if" => Ok(If),
-            "else" => Ok(Else),
-            _ => Err("String is not a valid keyword".to_owned()),
-        }
-    }
+/// A token that represents a match between characters and a rule
+pub struct Token {
+    /// Rule name
+    pub head: String,
+    /// Matched part
+    pub body: String,
 }
 
 /// A lexer that can emit a stream of tokens instead of loading a full files worth of tokens in to
 /// memory
 pub struct Lexer {
-    reader: BufReader<File>,
-    dfa: DFA,
-    current_line: Vec<char>,
+    matcher: LexerMatcher,
+    file_contents: String,
 }
 impl Lexer {
     /// Creates a new lexer
-    pub fn new(mut file: File) -> io::Result<Self> {
-        let mut buf: [u8; 1] = [0];
-        file.read_exact(&mut buf)?;
-        let first_char = buf
-            .iter()
-            .map(|e| *e as char)
-            .next()
-            .expect("Failed to take first char");
-        Ok(Self {
-            reader: BufReader::new(file),
-            dfa: DFA::new(first_char),
-            current_line: vec![],
-        })
+    pub fn new(file_contents: String, lexing_rules: Vec<Rule>) -> Self {
+        Self {
+            matcher: LexerMatcher::new(lexing_rules),
+            file_contents,
+        }
     }
     /// Lexes the next token
     pub fn next_token(&mut self) -> Option<Token> {
-        loop {
-            if let Some(next_char) = self.next_char() {
-                let result = self.dfa.advance(next_char);
-                if let Some(token) = result {
-                    self.dfa.reset();
-                    return Some(token);
-                }
-            } else {
-                break;
-            }
+        let next_token = self.matcher.next_best_match(&self.file_contents);
+        if let Some(token) = &next_token {
+            self.file_contents = self.file_contents[token.body.len()..].to_owned();
         }
-        self.dfa.finish()
-    }
-
-    /// Returns the next character of the file
-    fn next_char(&mut self) -> Option<char> {
-        if self.current_line.len() == 0 {
-            let mut new_line = String::new();
-            let result = self
-                .reader
-                .read_line(&mut new_line)
-                .expect("Failed to read file");
-            if result == 0 {
-                // Probably eof
-                return None;
-            }
-            self.current_line = new_line.chars().collect();
-        }
-        // Returning the next char
-        Some(self.current_line.remove(0))
+        next_token
     }
 }
 /// Internal test module for tokenizing
 /// These focus on files and the larger whole rather than individual token lexing
 #[cfg(test)]
 mod tests {
-    use super::{
-        Lexer, Literal,
-        ReservedKeyword::{self, *},
-        Token::*,
+    use crate::{
+        grammar::types::{GrammarNode, Rule},
+        lexing::{Lexer, Token},
     };
-    use std::{fs::File, path::PathBuf, str::FromStr};
-    const TEST_FILE_DIR: &str = "test_files";
+
     #[test]
-    fn keyword_parsing() {
-        /// Tests if you can turn the keyword into a string and then turn it back into a keyword
-        fn test_variant(variant: ReservedKeyword) {
-            assert_eq!(ReservedKeyword::from_str(&variant.to_string()), Ok(variant));
-        }
-        test_variant(ReservedKeyword::For);
-        test_variant(ReservedKeyword::While);
-        test_variant(ReservedKeyword::VariableDeclaration);
-        test_variant(ReservedKeyword::Function);
-        test_variant(ReservedKeyword::Return);
-    }
-    #[test]
-    fn token_test1() {
-        let test_dir = PathBuf::from(format!("{TEST_FILE_DIR}/token_test1.txt"));
-        let mut lexer = Lexer::new(File::open(test_dir).unwrap()).unwrap();
+    fn simple_lexing() {
+        let char_rule = Rule {
+            head: "CHAR".to_owned(),
+            body: Some(crate::grammar::types::GrammarNode::Choice(vec![
+                GrammarNode::Literal("a".to_owned()),
+                GrammarNode::Literal("b".to_owned()),
+                GrammarNode::Literal("c".to_owned()),
+                GrammarNode::Literal("d".to_owned()),
+                GrammarNode::Literal("e".to_owned()),
+                GrammarNode::Literal("f".to_owned()),
+                GrammarNode::Literal("g".to_owned()),
+                GrammarNode::Literal("h".to_owned()),
+                GrammarNode::Literal("i".to_owned()),
+                GrammarNode::Literal("j".to_owned()),
+                GrammarNode::Literal("k".to_owned()),
+                GrammarNode::Literal("l".to_owned()),
+                GrammarNode::Literal("m".to_owned()),
+                GrammarNode::Literal("n".to_owned()),
+                GrammarNode::Literal("o".to_owned()),
+                GrammarNode::Literal("p".to_owned()),
+                GrammarNode::Literal("q".to_owned()),
+                GrammarNode::Literal("r".to_owned()),
+                GrammarNode::Literal("s".to_owned()),
+                GrammarNode::Literal("t".to_owned()),
+                GrammarNode::Literal("u".to_owned()),
+                GrammarNode::Literal("v".to_owned()),
+                GrammarNode::Literal("w".to_owned()),
+                GrammarNode::Literal("x".to_owned()),
+                GrammarNode::Literal("y".to_owned()),
+                GrammarNode::Literal("z".to_owned()),
+                GrammarNode::Literal(" ".to_owned()),
+            ])),
+        };
+        let string_rule = Rule {
+            head: "STRING".to_owned(),
+            body: Some(crate::grammar::types::GrammarNode::Sequence(vec![
+                GrammarNode::Literal("\"".to_owned()),
+                GrammarNode::ZeroOrMore(Box::new(GrammarNode::Reference("CHAR".to_owned()))),
+                GrammarNode::Literal("\"".to_owned()),
+            ])),
+        };
+        let rules = vec![char_rule, string_rule];
+        let contents = "\"hello world\"\"abcdefghijklmnopqrstuvwxyz\"".to_owned();
+        let mut lexer = Lexer::new(contents, rules);
         let mut tokens = vec![];
         while let Some(token) = lexer.next_token() {
             tokens.push(token);
@@ -189,94 +98,15 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Keyword(VariableDeclaration),
-                Identifier("foo".to_owned()),
-                Equals,
-                Literal(Literal::Int(1)),
-                Semicolon,
-                Keyword(VariableDeclaration),
-                Identifier("bar".to_owned()),
-                Colon,
-                Identifier("int".to_owned()),
-                Equals,
-                Literal(Literal::Int(2)),
-                Semicolon,
-            ]
-        )
-    }
-    #[test]
-    fn token_test2() {
-        let test_dir = PathBuf::from(format!("{TEST_FILE_DIR}/token_test2.txt"));
-        let mut lexer = Lexer::new(File::open(test_dir).unwrap()).unwrap();
-        let mut tokens = vec![];
-        while let Some(token) = lexer.next_token() {
-            tokens.push(token);
-        }
-        assert_eq!(
-            tokens,
-            vec![
-                Keyword(ReservedKeyword::VariableDeclaration),
-                Identifier("my_var".to_owned()),
-                Equals,
-                Literal(Literal::String("Hello world".to_owned())),
-                Semicolon,
-                Keyword(ReservedKeyword::If),
-                Identifier("my_var".to_owned()),
-                EqualsEquals,
-                Literal(Literal::String("Hello world".to_owned())),
-                LBrace,
-                Identifier("print".to_owned()),
-                LParentheses,
-                Literal(Literal::String("Yep".to_owned())),
-                RParentheses,
-                Semicolon,
-                RBrace,
-                Keyword(ReservedKeyword::Else),
-                LBrace,
-                Identifier("print".to_owned()),
-                LParentheses,
-                Literal(Literal::String("Nope".to_owned())),
-                RParentheses,
-                Semicolon,
-                RBrace
+                Token {
+                    head: "STRING".to_owned(),
+                    body: "\"hello world\"".to_owned()
+                },
+                Token {
+                    head: "STRING".to_owned(),
+                    body: "\"abcdefghijklmnopqrstuvwxyz\"".to_owned(),
+                }
             ]
         );
-    }
-    #[test]
-    fn token_test_operations() {
-        let test_dir = PathBuf::from(format!("{TEST_FILE_DIR}/token_test_operations.txt"));
-        let mut lexer = Lexer::new(File::open(test_dir).unwrap()).unwrap();
-        let mut tokens = vec![];
-        while let Some(token) = lexer.next_token() {
-            tokens.push(token);
-        }
-        assert_eq!(
-            tokens,
-            vec![
-                Literal(Literal::Int(1)),
-                Plus,
-                LParentheses,
-                Literal(Literal::Int(2)),
-                MultiplicationSign,
-                Literal(Literal::Int(4)),
-                RParentheses,
-                DivisionSign,
-                Literal(Literal::Int(6)),
-                Semicolon,
-                Literal(Literal::Int(5)),
-                DivisionSign,
-                Literal(Literal::Int(4)),
-                DivisionSign,
-                Literal(Literal::Int(2)),
-                Plus,
-                LParentheses,
-                Literal(Literal::Int(5)),
-                MultiplicationSign,
-                Literal(Literal::Int(30)),
-                Minus,
-                Literal(Literal::Int(15)),
-                RParentheses,
-            ]
-        )
     }
 }

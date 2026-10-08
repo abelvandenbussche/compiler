@@ -1,5 +1,4 @@
 use EBNFToken::*;
-const EBNF: &str = include_str!("../../../docs/grammar.ebnf");
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum EBNFToken {
@@ -30,10 +29,10 @@ pub enum EBNFToken {
 }
 
 /// Lexes the EBNF into a sequence of tokens
-pub fn lex() -> Vec<EBNFToken> {
+pub fn lex(ebnf: String) -> Vec<EBNFToken> {
     // Preprocessing
     const SPECIAL_CHARS: [char; 10] = ['[', ']', '(', ')', '{', '}', '=', ',', ';', '|'];
-    let processed_ebnf = space_special_chars(EBNF, &SPECIAL_CHARS);
+    let processed_ebnf = space_special_chars(&ebnf, &SPECIAL_CHARS);
 
     // Parsing
     let mut tokens = vec![];
@@ -52,6 +51,10 @@ pub fn lex() -> Vec<EBNFToken> {
             }
             continue;
         }
+        // Don't include whitespace characters except for spaces
+        if c.is_whitespace() && c != ' ' {
+            continue;
+        }
         let result = match c {
             '[' => Some(LBracket),
             ']' => Some(RBracket),
@@ -68,7 +71,7 @@ pub fn lex() -> Vec<EBNFToken> {
                 None
             }
             ' ' => {
-                if in_progress.len() > 0 {
+                if !in_progress.is_empty() {
                     // The end of a identifier
                     let done = Identifier(in_progress);
                     in_progress = String::new();
@@ -123,7 +126,7 @@ fn space_special_chars(original: &str, specials: &[char]) -> String {
             processed.push(c);
             continue;
         }
-        if processed.len() > 0
+        if !processed.is_empty()
             && let Some(prev) = index_string(&processed, processed.len() - 1)
             && prev != ' '
         {
@@ -136,7 +139,7 @@ fn space_special_chars(original: &str, specials: &[char]) -> String {
     processed
 }
 fn index_string(str: &str, index: usize) -> Option<char> {
-    str.chars().skip(index).next()
+    str.chars().nth(index)
 }
 
 #[cfg(test)]
@@ -182,32 +185,5 @@ mod tests {
             space_special_chars("hello \"o\" world", special_chars),
             "h ell o  \"o\" w o rld"
         );
-    }
-
-    #[test]
-    fn tokenize_first_line() {
-        // This should change if the first line ever changes
-        let expected = vec![
-            Identifier("variable_declaration".to_owned()),
-            Equals,
-            Literal("let".to_owned()),
-            Comma,
-            Identifier("variable_identifier".to_owned()),
-            Comma,
-            LBracket,
-            Literal(":".to_owned()),
-            Comma,
-            Identifier("type".to_owned()),
-            RBracket,
-            Comma,
-            Literal("=".to_owned()),
-            Comma,
-            Identifier("value".to_owned()),
-        ];
-        let output: Vec<EBNFToken> = lex()
-            .into_iter()
-            .take_while(|token| token != &Semicolon)
-            .collect();
-        assert_eq!(output, expected);
     }
 }

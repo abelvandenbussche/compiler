@@ -32,3 +32,6 @@ Example of what the user could write where the program is a one or more statemen
 program = { statement }
 statement = ... | ... | ...
 ```
+
+# Combined compiler
+We could define multiple custom EBNF rules for things like classes, functions and such that the user could write syntax for and customize. This would allow for abstractnes that where the user can define the language but also allow classes and such.

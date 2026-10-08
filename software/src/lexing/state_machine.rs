@@ -1,247 +1,82 @@
-use crate::lexing::Literal;
+use std::collections::HashMap;
 
-use super::{
-    ReservedKeyword,
-    Token::{self, *},
+use crate::{
+    grammar::{
+        matches_rule, rules_to_map,
+        types::{GrammarNode, Rule},
+    },
+    lexing::Token,
 };
-use std::str::FromStr;
 
-/// ## Deterministic Finite Automaton ≈ Finite state machine
-/// A state machine that systematically reads characters and changes its state based on it
-pub struct DFA {
-    state: Option<Token>,
-    current_char: char,
-    next_char: char,
+/// A matcher that checks against every rule in its collection and returns the best fitting match
+pub struct LexerMatcher {
+    rules: HashMap<String, GrammarNode>,
 }
 
-// Make a list of valid identifier characters
-// This list does not include numbers because numbers are not valid as the first character
-const IDENTIFIER_CHARS: [char; 26 * 2 + 1] = {
-    let mut arr = [' '; 53];
-    let mut i = 0;
-    while i < 26 {
-        let c = (b'a' + i as u8) as char;
-        // Lowercase
-        arr[i] = c;
-        // Uppercase
-        arr[i + 26] = c.to_ascii_uppercase();
-        i += 1;
-    }
-    arr[52] = '_';
-    arr
-};
-
-impl DFA {
+impl LexerMatcher {
     /// Create a new DFA instance
-    pub fn new(first_char: char) -> Self {
+    pub fn new(rules: Vec<Rule>) -> Self {
+        let hash_map_rules = rules_to_map(rules);
         Self {
-            state: None,
-            // This will get replaced the first call of advance
-            current_char: ' ',
-            next_char: first_char,
+            rules: hash_map_rules,
         }
     }
 
-    /// Resets the state machine to its original state and clears its read string
-    pub fn reset(&mut self) {
-        self.state = None;
-    }
-
-    /// Consumes the next character and returns wether or not it has reached a final token
-    pub fn advance(&mut self, next_char: char) -> Option<Token> {
-        // Switching it around
-        self.current_char = self.next_char;
-        self.next_char = next_char;
-
-        if let Some(state_token) = &mut self.state {
-            match state_token {
-                Equals => {
-                    if self.current_char == '=' {
-                        return Some(EqualsEquals);
-                    } else {
-                        return Some(Equals);
-                    }
-                }
-                Identifier(current_ident) => {
-                    current_ident.push(self.current_char);
-                    if !IDENTIFIER_CHARS.contains(&self.next_char) {
-                        // End of identifier
-                        // Checking if it is a reserved keyword
-                        return if let Ok(keyword) = ReservedKeyword::from_str(&current_ident) {
-                            Some(Keyword(keyword))
-                        } else if *current_ident == "false" {
-                            Some(Literal(Literal::Bool(false)))
-                        } else if *current_ident == "true" {
-                            Some(Literal(Literal::Bool(true)))
-                        } else {
-                            self.state.take()
-                        };
-                    }
-                }
-                Literal(variant) => match variant {
-                    Literal::Int(int) => {
-                        if let Some(new_digit) = self.current_char.to_digit(10) {
-                            *int = *int * 10 + new_digit as i128;
-                        } else if self.current_char == '.' {
-                            self.state = Some(Literal(Literal::Float(*int as f64)));
-                        } else {
-                            return self.state.take();
-                        }
-
-                        if !self.next_char.is_digit(10) {
-                            return self.state.take();
-                        }
-                    }
-                    Literal::Float(float) => {
-                        if self.current_char.is_digit(10) {
-                            let mut float_string =
-                                format!("{:?}", float).trim_matches('0').to_owned();
-                            // Stripping trailing zeros
-                            float_string.push(self.current_char);
-                            // Safe to unwrap because of above checks
-                            *float = f64::from_str(&float_string).unwrap();
-                            if !self.next_char.is_digit(10) {
-                                return self.state.take();
-                            }
-                        }
-                    }
-                    Literal::String(string) => {
-                        if self.current_char == '"' {
-                            return self.state.take();
-                        } else {
-                            string.push(self.current_char);
-                        }
-                    }
-                    _ => todo!(),
-                },
-                _ => {}
-            }
-        } else {
-            self.state = match self.current_char {
-                '=' => Some(Equals),
-                '"' => Some(Literal(Literal::String(String::new()))),
-                '{' => return Some(LBrace),
-                '}' => return Some(RBrace),
-                '[' => return Some(LBracket),
-                ']' => return Some(RBracket),
-                '(' => return Some(LParentheses),
-                ')' => return Some(RParentheses),
-                ';' => return Some(Semicolon),
-                ':' => return Some(Colon),
-                '+' => return Some(Plus),
-                '-' => return Some(Minus),
-                '*' => return Some(MultiplicationSign),
-                '/' => return Some(DivisionSign),
-                ' ' => None,
-                c => {
-                    if IDENTIFIER_CHARS.contains(&c) {
-                        Some(Identifier(String::from(c)))
-                    } else if let Some(digit) = self.current_char.to_digit(10) {
-                        let value = Some(Literal(Literal::Int(digit as i128)));
-                        if self.next_char.is_digit(10) || self.next_char == '.' {
-                            value
-                        } else {
-                            return value;
-                        }
-                    } else {
-                        None
-                    }
-                }
+    /// Finds the next best match using a greedy algorithm
+    pub fn next_best_match(&self, working_string: &str) -> Option<Token> {
+        let mut result_map = HashMap::new();
+        // Checking each rule
+        for (rule_name, rule_body) in &self.rules {
+            let result = matches_rule(working_string, rule_body, &self.rules);
+            if let Some(matched_slice) = result {
+                result_map.insert(rule_name, matched_slice);
             }
         }
-        None
-    }
-    /// Similar to the [crate::lexing::state_machine::DFA::advance] method but does not take a char instead giving it an whitespace
-    /// character
-    ///
-    /// This should be called when at the end of a source file
-    pub fn finish(&mut self) -> Option<Token> {
-        self.advance(' ')
+        // Selecting the best
+        let mut best: Option<(&String, &str)> = None;
+        for (k, e) in result_map.into_iter() {
+            if let Some((_best_k, best_e)) = best {
+                if e.chars().count() > best_e.chars().count() {
+                    best = Some((k, e));
+                }
+            } else {
+                best = Some((k, e))
+            }
+        }
+        // building the token
+        let token = Token {
+            head: best?.0.clone(),
+            body: best?.1.to_owned(),
+        };
+        Some(token)
     }
 }
 
-/// These tests focus on the capability to identify single tokens
 #[cfg(test)]
 mod tests {
-
-    use super::super::{
-        ReservedKeyword::{self, *},
-        Token::{self, *},
+    use crate::{
+        grammar::types::{GrammarNode, Rule},
+        lexing::{Token, state_machine::LexerMatcher},
     };
-    use super::DFA;
-
-    /// A helper function to test the state machine\
-    /// Feeds a string into the state machine and returns its first not [None] output or none if it
-    /// did not give any
-    fn feed_string(string: &str) -> Option<Token> {
-        let mut chars_iter = string.chars();
-        let first_char = chars_iter.next().unwrap();
-        let mut dfa = DFA::new(first_char);
-        for c in chars_iter {
-            let res = dfa.advance(c);
-            if res.is_some() {
-                return res;
-            }
-        }
-        dfa.finish()
-    }
-
     #[test]
-    fn very_simple_lexing() {
-        assert_eq!(feed_string("= "), Some(Equals));
-        assert_eq!(feed_string("=="), Some(EqualsEquals));
-    }
-    #[test]
-    fn lex_keywords_and_identifiers() {
+    fn best_match() {
+        let string = "Hello world";
+        let rule1 = Rule {
+            head: "RULE1".to_owned(),
+            body: Some(GrammarNode::Literal("Hello".to_owned())),
+        };
+        let rule2 = Rule {
+            head: "RULE2".to_owned(),
+            body: Some(GrammarNode::Literal("Hello wo".to_owned())),
+        };
+        let matcher = LexerMatcher::new(vec![rule1, rule2]);
+        let match_result = matcher.next_best_match(string);
         assert_eq!(
-            feed_string(&format!("{} ", ReservedKeyword::For)),
-            Some(Keyword(ReservedKeyword::For))
-        );
-        assert_eq!(
-            feed_string(&format!("{} ", VariableDeclaration)),
-            Some(Keyword(VariableDeclaration))
-        );
-        assert_eq!(feed_string("myvar"), Some(Identifier("myvar".to_owned())));
-        assert_eq!(
-            feed_string(&format!("{}test ", VariableDeclaration)),
-            Some(Identifier(format!("{}test", VariableDeclaration)))
-        );
-    }
-    #[test]
-    fn lex_brackets() {
-        assert_eq!(feed_string("{"), Some(LBrace));
-        assert_eq!(feed_string("}"), Some(RBrace));
-        assert_eq!(feed_string("("), Some(LParentheses));
-        assert_eq!(feed_string(")"), Some(RParentheses));
-        assert_eq!(feed_string("["), Some(LBracket));
-        assert_eq!(feed_string("]"), Some(RBracket));
-        assert_eq!(feed_string(";"), Some(Semicolon));
-        assert_eq!(feed_string(":"), Some(Colon));
-    }
-
-    #[test]
-    fn lex_literals() {
-        assert_eq!(
-            feed_string("\"Hello world\""),
-            Some(Literal(crate::lexing::Literal::String(
-                "Hello world".to_owned()
-            )))
-        );
-        assert_eq!(
-            feed_string("10"),
-            Some(Literal(crate::lexing::Literal::Int(10)))
-        );
-        assert_eq!(
-            feed_string("2.5"),
-            Some(Literal(crate::lexing::Literal::Float(2.5)))
-        );
-        assert_eq!(
-            feed_string("true"),
-            Some(Literal(crate::lexing::Literal::Bool(true)))
-        );
-        assert_eq!(
-            feed_string("false"),
-            Some(Literal(crate::lexing::Literal::Bool(false)))
+            match_result,
+            Some(Token {
+                head: "RULE2".to_owned(),
+                body: "Hello wo".to_owned()
+            })
         );
     }
 }

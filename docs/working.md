@@ -1,4 +1,4 @@
-# Flowchart
+# General working
 ```mermaid
 flowchart TD
 A[/Source code/]
@@ -24,4 +24,11 @@ E --Done--> F
 
 AB --> BB
 BB --> H
+```
+
+# Grammar parsing phase
+````mermaid 
+flowchart TD
+
+
 ```

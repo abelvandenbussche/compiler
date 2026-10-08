@@ -125,13 +125,14 @@ pub fn matches_rule<'a>(
             Some(&text[..range])
         }
         GrammarNode::Optional(option) => {
-            // TODO:
-            todo!();
+            // TODO: write better tests for this
+            if let Some(match_slice) = matches_rule(text, option, rules) {
+                Some(match_slice)
+            } else {
+                Some("")
+            }
         }
-        GrammarNode::Grouping(group) => {
-            // TODO:
-            todo!();
-        }
+        GrammarNode::Grouping(group) => matches_rule(text, group, rules),
     }
 }
 

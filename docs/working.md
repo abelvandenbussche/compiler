@@ -27,17 +27,17 @@ AB --> BB
 BB --> H
 ```
 
-## Grammar parsing
+## Precise workings
 ```mermaid 
 flowchart TD
+
 lexing[Lex EBNF grammar file into tokens]
 rule_gen[Generate rules from tokens]
 
+source_code[/Read source code/]
+rule_matching[Match source code with lexing rules]
+
 lexing --> rule_gen
-```
-
-## Source code lexing
-```mermaid
-flowchart TD
-
-```
+rule_gen --> |Token rules| rule_matching
+source_code --> rule_matching
+``` 

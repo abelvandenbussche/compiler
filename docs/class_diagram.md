@@ -28,7 +28,13 @@ classDiagram
         Grouping
         Choice
     }
+    class Rule {
+       + String head
+       + Option<GrammarNode> body
+    }
+
     Lexer ..> Token
     LexerMatcher ..> Token
     LexerMatcher *-- GrammarNode
+    Rule *-- GrammarNode
 ```

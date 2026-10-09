@@ -1,4 +1,5 @@
-# General working
+# Compiler workings
+## General overview
 ```mermaid
 flowchart TD
 A[/Source code/]
@@ -26,9 +27,17 @@ AB --> BB
 BB --> H
 ```
 
-# Grammar parsing phase
-````mermaid 
+## Grammar parsing
+```mermaid 
 flowchart TD
+lexing[Lex EBNF grammar file into tokens]
+rule_gen[Generate rules from tokens]
 
+lexing --> rule_gen
+```
+
+## Source code lexing
+```mermaid
+flowchart TD
 
 ```

@@ -1,13 +1,9 @@
-use std::collections::HashMap;
-
 /// Rules used by the parser to match `terminals` produced by the lexer
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Rule {
     pub head: String,
     pub body: Option<GrammarNode>,
 }
-
-impl Rule {}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum GrammarNode {

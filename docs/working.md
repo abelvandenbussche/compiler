@@ -39,5 +39,5 @@ rule_matching[Match source code with lexing rules]
 
 lexing --> rule_gen
 rule_gen --> |Token rules| rule_matching
-source_code --> rule_matching
+source_cod --> rule_matching
 ``` 

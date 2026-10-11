@@ -32,7 +32,9 @@ pub enum EBNFToken {
 pub fn lex(ebnf: String) -> Vec<EBNFToken> {
     // Preprocessing
     const SPECIAL_CHARS: [char; 10] = ['[', ']', '(', ')', '{', '}', '=', ',', ';', '|'];
-    let processed_ebnf = space_special_chars(&ebnf, &SPECIAL_CHARS);
+    let mut processed_ebnf = space_special_chars(&ebnf, &SPECIAL_CHARS);
+    // Adding a space so that it always finnishes the last token
+    processed_ebnf.push(' ');
 
     // Parsing
     let mut tokens = vec![];
@@ -184,6 +186,81 @@ mod tests {
         assert_eq!(
             space_special_chars("hello \"o\" world", special_chars),
             "h ell o  \"o\" w o rld"
+        );
+    }
+    #[test]
+    fn simple_ebnf_lexing() {
+        assert_eq!(
+            lex("foo = bar;".to_owned()),
+            vec![
+                Identifier("foo".to_owned()),
+                Equals,
+                Identifier("bar".to_owned()),
+                Semicolon,
+            ]
+        );
+        assert_eq!(
+            lex("foo = \"Hello world\" | [bar];".to_owned()),
+            vec![
+                Identifier("foo".to_owned()),
+                Equals,
+                Literal("Hello world".to_owned()),
+                Pipe,
+                LBracket,
+                Identifier("bar".to_owned()),
+                RBracket,
+                Semicolon,
+            ]
+        );
+        assert_eq!(
+            lex("foo = bar | \"something\", ([{}])".to_owned()),
+            vec![
+                Identifier("foo".to_owned()),
+                Equals,
+                Identifier("bar".to_owned()),
+                Pipe,
+                Literal("something".to_owned()),
+                Comma,
+                LParentheses,
+                LBracket,
+                LBrace,
+                RBrace,
+                RBracket,
+                RParenthese
+            ]
+        );
+    }
+    #[test]
+    fn identifier_lexing() {
+        assert_eq!(
+            lex("foo =".to_owned()),
+            vec![Identifier("foo".to_owned()), Equals]
+        );
+        assert_eq!(
+            lex("%foo =".to_owned()),
+            vec![Identifier("%foo".to_owned()), Equals]
+        );
+        assert_eq!(
+            lex("FoO =".to_owned()),
+            vec![Identifier("FoO".to_owned()), Equals]
+        );
+        assert_eq!(
+            lex("FOO =".to_owned()),
+            vec![Identifier("FOO".to_owned()), Equals]
+        );
+    }
+    #[test]
+    fn ignore_whitespace() {
+        assert_eq!(
+            lex("    foo   =something|    \"everything\";".to_owned()),
+            vec![
+                Identifier("foo".to_owned()),
+                Equals,
+                Identifier("something".to_owned()),
+                Pipe,
+                Literal("everything".to_owned()),
+                Semicolon,
+            ]
         );
     }
 }

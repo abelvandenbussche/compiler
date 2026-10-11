@@ -17,8 +17,6 @@ pub mod types;
 /// # What it returns
 /// It returns a tuple containing the token rules and the grammar rules
 /// where the first value are the token rules and the second are the grammar rules
-///
-/// It takes in a grammar file from wich it will read and parse the grammar
 pub fn get_rules(ebnf: String) -> (Vec<Rule>, Vec<Rule>) {
     let tokens = lex(ebnf);
     let mut grammar_rules = vec![];
@@ -261,5 +259,12 @@ mod tests {
             matches_rule("Hello World", &rule_map["OPTIONAL"], &rule_map,),
             Some("Hello World")
         );
+    }
+    #[test]
+    fn getting_seperated_rules() {
+        let ebnf_input = r#"TEST = "something";
+foo = "something else";
+BaR = "yet another something else";
+    "#;
     }
 }

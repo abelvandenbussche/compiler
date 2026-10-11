@@ -4,7 +4,7 @@
 use crate::grammar::{
     lexer::{EBNFToken::Semicolon, lex},
     tree::parse_tokens,
-    types::{GrammarNode, Rule},
+    types::{GrammarNode, Rule, RuleMap},
 };
 use std::{collections::HashMap, fs::File, io::Read};
 
@@ -63,7 +63,7 @@ where
 }
 
 /// Converts a list of rules to a hashmap for more efficient indexing and finding of rules
-pub fn rules_to_map(rules: Vec<Rule>) -> HashMap<String, GrammarNode> {
+pub fn rules_to_map(rules: Vec<Rule>) -> RuleMap {
     let mut map = HashMap::new();
     for rule in rules {
         if let Some(node) = rule.body {
@@ -77,11 +77,7 @@ pub fn rules_to_map(rules: Vec<Rule>) -> HashMap<String, GrammarNode> {
 /// returns `None` if it did not find a match and `Some` if it did
 ///
 /// If if found a match if returns what part of the string it found to match
-pub fn matches_rule<'a>(
-    text: &'a str,
-    rule: &GrammarNode,
-    rules: &HashMap<String, GrammarNode>,
-) -> Option<&'a str> {
+pub fn matches_rule<'a>(text: &'a str, rule: &GrammarNode, rules: &RuleMap) -> Option<&'a str> {
     match rule {
         GrammarNode::Sequence(list) => {
             let mut first_index = 0;

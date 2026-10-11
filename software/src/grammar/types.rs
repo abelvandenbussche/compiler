@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 /// Rules used by the parser to match `terminals` produced by the lexer
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Rule {
@@ -22,3 +24,6 @@ pub enum GrammarNode {
     /// Choice of a single node
     Choice(Vec<GrammarNode>),
 }
+
+// Alias to make it clearer what the point of the type is
+pub type RuleMap = HashMap<String, GrammarNode>;

@@ -3,14 +3,14 @@ use std::collections::HashMap;
 use crate::{
     grammar::{
         matches_rule, rules_to_map,
-        types::{GrammarNode, Rule},
+        types::{Rule, RuleMap},
     },
     lexing::Token,
 };
 
 /// A matcher that checks against every rule in its collection and returns the best fitting match
 pub struct LexerMatcher {
-    rules: HashMap<String, GrammarNode>,
+    rules: RuleMap,
 }
 
 impl LexerMatcher {

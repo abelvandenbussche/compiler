@@ -24,7 +24,7 @@ pub fn get_rules(ebnf: String) -> (Vec<Rule>, Vec<Rule>) {
     for i in split_list_on(tokens, Semicolon) {
         let new_rule = parse_tokens(i);
         let new_rule_head = &new_rule.head;
-        if new_rule_head.to_uppercase() == *new_rule_head {
+        if is_lexing_rule(new_rule_head) {
             token_rules.push(new_rule);
         } else {
             grammar_rules.push(new_rule);
@@ -72,7 +72,7 @@ pub fn rules_to_map(rules: Vec<Rule>) -> RuleMap {
 /// Checks whether a certain string matches a given rule
 /// returns `None` if it did not find a match and `Some` if it did
 ///
-/// If if found a match if returns what part of the string it found to match
+/// If it found a match if returns what part of the string it found to match
 pub fn matches_rule<'a>(text: &'a str, rule: &GrammarNode, rules: &RuleMap) -> Option<&'a str> {
     match rule {
         GrammarNode::Sequence(list) => {
@@ -128,14 +128,27 @@ pub fn matches_rule<'a>(text: &'a str, rule: &GrammarNode, rules: &RuleMap) -> O
     }
 }
 
+/// Returns whether `true` if the rule is a lexing rule and `false` if the rule is another type
+pub fn is_lexing_rule(rule_name: &str) -> bool {
+    rule_name.to_uppercase() == rule_name
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::grammar::{
-        get_rules, matches_rule, rules_to_map,
-        types::{GrammarNode, Rule},
-    };
+    use crate::grammar::types::{GrammarNode, Rule};
 
-    use super::split_list_on;
+    use super::{get_rules, is_lexing_rule, matches_rule, rules_to_map, split_list_on};
+
+    #[test]
+    fn lexing_rule_identification() {
+        assert!(is_lexing_rule("FOO"));
+        assert!(is_lexing_rule("FOO1"));
+
+        assert!(!is_lexing_rule("foo"));
+        assert!(!is_lexing_rule("Foo"));
+        assert!(!is_lexing_rule("FoO"));
+        assert!(!is_lexing_rule("FoO*"));
+    }
     #[test]
     fn splitting_list() {
         // Splitting multiple times

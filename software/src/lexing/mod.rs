@@ -5,7 +5,7 @@ use crate::{grammar::types::Rule, lexing::state_machine::LexerMatcher};
 
 mod state_machine;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 /// A token that represents a match between characters and a rule
 pub struct Token {
     /// Rule name

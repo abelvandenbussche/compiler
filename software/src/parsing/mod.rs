@@ -6,6 +6,7 @@ use crate::grammar::types::RuleMap;
 use super::lexing::Token;
 
 /// Represents the combination of the `grammar` rules to the `Lexer` tokens
+#[derive(Debug, PartialEq, Eq)]
 pub enum MatchNode {
     Token(Token),
     Rule {

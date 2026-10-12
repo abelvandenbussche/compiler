@@ -24,12 +24,10 @@ pub fn get_rules(ebnf: String) -> (Vec<Rule>, Vec<Rule>) {
     for i in split_list_on(tokens, Semicolon) {
         let new_rule = parse_tokens(i);
         let new_rule_head = &new_rule.head;
-        if new_rule_head.to_lowercase() == *new_rule_head {
-            grammar_rules.push(new_rule);
-        } else if new_rule_head.to_uppercase() == *new_rule_head {
+        if new_rule_head.to_uppercase() == *new_rule_head {
             token_rules.push(new_rule);
         } else {
-            panic!("Invalid rule head: {new_rule_head}");
+            grammar_rules.push(new_rule);
         }
     }
     (token_rules, grammar_rules)
@@ -133,7 +131,7 @@ pub fn matches_rule<'a>(text: &'a str, rule: &GrammarNode, rules: &RuleMap) -> O
 #[cfg(test)]
 mod tests {
     use crate::grammar::{
-        matches_rule, rules_to_map,
+        get_rules, matches_rule, rules_to_map,
         types::{GrammarNode, Rule},
     };
 
@@ -265,6 +263,34 @@ mod tests {
         let ebnf_input = r#"TEST = "something";
 foo = "something else";
 BaR = "yet another something else";
+yet = %another
     "#;
+        let (lexing_rules, parsing_rules) = get_rules(ebnf_input.to_owned());
+        assert_eq!(
+            lexing_rules,
+            vec![Rule {
+                head: "TEST".to_owned(),
+                body: Some(GrammarNode::Literal("something".to_owned()))
+            }]
+        );
+        assert_eq!(
+            parsing_rules,
+            vec![
+                Rule {
+                    head: "foo".to_owned(),
+                    body: Some(GrammarNode::Literal("something else".to_owned()))
+                },
+                Rule {
+                    head: "BaR".to_owned(),
+                    body: Some(GrammarNode::Literal(
+                        "yet another something else".to_owned()
+                    ))
+                },
+                Rule {
+                    head: "yet".to_owned(),
+                    body: Some(GrammarNode::Reference("%another".to_owned()))
+                }
+            ]
+        )
     }
 }

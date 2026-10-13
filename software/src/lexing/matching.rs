@@ -14,7 +14,7 @@ pub struct LexerMatcher {
 }
 
 impl LexerMatcher {
-    /// Create a new DFA instance
+    /// Create a new `LexerMatcher` instance
     pub fn new(rules: Vec<Rule>) -> Self {
         let hash_map_rules = rules_to_map(rules);
         Self {
@@ -56,7 +56,7 @@ impl LexerMatcher {
 mod tests {
     use crate::{
         grammar::types::{GrammarNode, Rule},
-        lexing::{Token, state_machine::LexerMatcher},
+        lexing::{Token, matching::LexerMatcher},
     };
     #[test]
     fn best_match() {

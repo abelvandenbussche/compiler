@@ -1,9 +1,9 @@
 //! This module converts the characters read from a file into tokens that are more easily parsed by
 //! the [crate::parsing]
 
-use crate::{grammar::types::Rule, lexing::state_machine::LexerMatcher};
+use crate::{grammar::types::Rule, lexing::matching::LexerMatcher};
 
-mod state_machine;
+mod matching;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 /// A token that represents a match between characters and a rule

@@ -88,7 +88,7 @@ mod tests {
             types::{GrammarNode, Rule},
         },
         lexing::Token,
-        parsing::{MatchNode, build_syntax_tree},
+        parsing::{MatchNode, build_syntax_tree, tokens_match_rule},
     };
 
     #[test]
@@ -100,6 +100,25 @@ mod tests {
                 GrammarNode::Reference("BAR".to_owned()),
             ])),
         };
+        let input_tokens = vec![
+            Token {
+                head: "FOO".to_owned(),
+                body: "Hello".to_owned(),
+            },
+            Token {
+                head: "BAR".to_owned(),
+                body: " world!".to_owned(),
+            },
+            Token {
+                head: "FOOBAR".to_owned(),
+                body: "This should not be included".to_owned(),
+            },
+        ];
+        let rules_map = rules_to_map(vec![program_rule]);
+        assert_eq!(
+            tokens_match_rule(&input_tokens, &rules_map["program"], &rules_map),
+            Some(&input_tokens[..2])
+        );
     }
 
     #[test]

@@ -28,7 +28,7 @@ pub fn build_syntax_tree(
         children: vec![],
     });
     match &mut tree {
-        MatchNode::Token(token) => panic!("Tree is token"),
+        MatchNode::Token(token) => panic!("Tree is token: {:?}", token),
         MatchNode::Rule { name, children } => {
             let rule = &rules[name];
             if let Some(children_slice) = tokens_match_rule(&tokens, rule, &rules) {
@@ -122,7 +122,7 @@ mod tests {
     }
 
     #[test]
-    fn token_matching() {
+    fn basic_token_matching() {
         let rules = vec![
             Rule {
                 head: "program".to_owned(),
@@ -173,4 +173,6 @@ mod tests {
             }
         )
     }
+    #[test]
+    fn complexer_token_matching() {}
 }

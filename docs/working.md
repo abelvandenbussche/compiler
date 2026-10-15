@@ -37,7 +37,10 @@ rule_gen[Generate rules from tokens]
 source_code[/Read source code/]
 rule_matching[Match source code with lexing rules]
 
+build_tree[Build syntax tree by matching Lexing tokens with parsing rules]
+
 lexing --> rule_gen
 rule_gen --> |Token rules| rule_matching
-source_cod --> rule_matching
+source_code --> |Raw text| rule_matching
+rule_matching --> |Lexing tokens| build_tree
 ``` 

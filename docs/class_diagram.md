@@ -32,6 +32,11 @@ classDiagram
        + String head
        + Option<GrammarNode> body
     }
+    class MatchNode {
+        <<Enumeration>>
+        Token
+        Rule
+    }
 
     Lexer ..> Token
     LexerMatcher ..> Token

@@ -64,6 +64,7 @@ fn tokens_match_rule<'a>(
             Some(&tokens[..first_index])
         }
         GrammarNode::Reference(reference) => {
+            println!("reference");
             if is_lexing_rule(reference) && tokens[0].head == *reference {
                 return Some(&tokens[..1]);
             }
@@ -73,6 +74,30 @@ fn tokens_match_rule<'a>(
                 None
             }
         }
+        GrammarNode::ZeroOrMore(internal_rule) => {
+            let mut range = 0;
+            while let Some(v) = tokens_match_rule(&tokens[range..], internal_rule, rules) {
+                range += v.len()
+            }
+            Some(&tokens[..range])
+        }
+        GrammarNode::Choice(to_choose) => {
+            for i in to_choose {
+                let result = tokens_match_rule(tokens, i, rules);
+                if result.is_some() {
+                    return result;
+                }
+            }
+            None
+        }
+        GrammarNode::Optional(option) => {
+            if let Some(match_slice) = tokens_match_rule(tokens, option, rules) {
+                Some(match_slice)
+            } else {
+                Some(&[])
+            }
+        }
+        GrammarNode::Literal(_) => None,
         _ => {
             eprintln!("got here with: {:?}", rule);
             todo!()
@@ -82,6 +107,7 @@ fn tokens_match_rule<'a>(
 
 #[cfg(test)]
 mod tests {
+
     use crate::{
         grammar::{
             rules_to_map,
@@ -122,14 +148,17 @@ mod tests {
     }
 
     #[test]
-    fn basic_token_matching() {
+    fn token_matching() {
         let rules = vec![
             Rule {
                 head: "program".to_owned(),
-                body: Some(crate::grammar::types::GrammarNode::Sequence(vec![
-                    GrammarNode::Reference("FOO".to_owned()),
-                    GrammarNode::Reference("SPACE".to_owned()),
-                    GrammarNode::Reference("BAR".to_owned()),
+                body: Some(GrammarNode::Sequence(vec![
+                    GrammarNode::Choice(vec![
+                        GrammarNode::Reference("FOO".to_owned()),
+                        GrammarNode::Reference("BAR".to_owned()),
+                    ]),
+                    GrammarNode::ZeroOrMore(Box::new(GrammarNode::Reference("SPACE".to_owned()))),
+                    GrammarNode::Optional(Box::new(GrammarNode::Reference("BAR".to_owned()))),
                 ])),
             },
             Rule {
@@ -145,7 +174,7 @@ mod tests {
                 body: Some(GrammarNode::Literal(" ".to_owned())),
             },
         ];
-        let tokens = vec![
+        let tokens1 = vec![
             Token {
                 head: "FOO".to_owned(),
                 body: "hello".to_owned(),
@@ -159,20 +188,49 @@ mod tests {
                 body: "world".to_owned(),
             },
         ];
+        let tokens2 = vec![
+            Token {
+                head: "BAR".to_owned(),
+                body: "world".to_owned(),
+            },
+            Token {
+                head: "SPACE".to_owned(),
+                body: " ".to_owned(),
+            },
+            Token {
+                head: "SPACE".to_owned(),
+                body: " ".to_owned(),
+            },
+            Token {
+                head: "BAR".to_owned(),
+                body: "world".to_owned(),
+            },
+        ];
         let rules_map = rules_to_map(rules);
-        let result = build_syntax_tree(tokens.clone(), rules_map, None);
+        let result1 = build_syntax_tree(tokens1.clone(), rules_map.clone(), None);
+        let result2 = build_syntax_tree(tokens2.clone(), rules_map, None);
         assert_eq!(
-            result,
+            result1,
             MatchNode::Rule {
                 name: "program".to_owned(),
                 children: vec![
-                    MatchNode::Token(tokens[0].clone()),
-                    MatchNode::Token(tokens[1].clone()),
-                    MatchNode::Token(tokens[2].clone())
+                    MatchNode::Token(tokens1[0].clone()),
+                    MatchNode::Token(tokens1[1].clone()),
+                    MatchNode::Token(tokens1[2].clone())
                 ]
             }
-        )
+        );
+        assert_eq!(
+            result2,
+            MatchNode::Rule {
+                name: "program".to_owned(),
+                children: vec![
+                    MatchNode::Token(tokens2[0].clone()),
+                    MatchNode::Token(tokens2[1].clone()),
+                    MatchNode::Token(tokens2[2].clone()),
+                    MatchNode::Token(tokens2[3].clone())
+                ]
+            }
+        );
     }
-    #[test]
-    fn complexer_token_matching() {}
 }

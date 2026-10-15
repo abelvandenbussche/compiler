@@ -109,8 +109,6 @@ fn find_matching_delimiter(left_idx: usize, list: &[EBNFToken]) -> Option<usize>
 
 #[cfg(test)]
 mod tests {
-    use std::io::pipe;
-
     use crate::grammar::{
         lexer::EBNFToken::{self, *},
         tree::{

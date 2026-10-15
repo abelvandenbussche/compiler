@@ -67,8 +67,12 @@ fn tokens_match_rule<'a>(
         }
         GrammarNode::Reference(reference) => {
             println!("reference");
-            if is_lexing_rule(reference) && tokens[0].head == *reference {
-                return Some(&tokens[..1]);
+            if is_lexing_rule(reference) {
+                if tokens.is_empty() {
+                    return None;
+                } else if tokens[0].head == *reference {
+                    return Some(&tokens[..1]);
+                }
             }
             if let Some(new_rule) = rules.get(reference) {
                 tokens_match_rule(tokens, new_rule, rules)
@@ -99,11 +103,8 @@ fn tokens_match_rule<'a>(
                 Some(&[])
             }
         }
+        GrammarNode::Grouping(group) => tokens_match_rule(tokens, group, rules),
         GrammarNode::Literal(_) => None,
-        _ => {
-            eprintln!("got here with: {:?}", rule);
-            todo!()
-        }
     }
 }
 
@@ -232,7 +233,66 @@ mod tests {
                     MatchNode::Token(tokens2[2].clone()),
                     MatchNode::Token(tokens2[3].clone())
                 ]
-            }
+            })
         );
+    }
+    #[test]
+    fn grouping_test() {
+        let rules = vec![
+            Rule {
+                head: "program".to_owned(),
+                body: Some(GrammarNode::Choice(vec![
+                    GrammarNode::Grouping(Box::new(GrammarNode::Sequence(vec![
+                        GrammarNode::Reference("FOO".to_owned()),
+                        GrammarNode::Reference("BAR".to_owned()),
+                    ]))),
+                    GrammarNode::Reference("BAR".to_owned()),
+                ])),
+            },
+            Rule {
+                head: "FOO".to_owned(),
+                body: Some(GrammarNode::Literal("foo".to_owned())),
+            },
+            Rule {
+                head: "BAR".to_owned(),
+                body: Some(GrammarNode::Literal("bar".to_owned())),
+            },
+        ];
+        let rule_map = rules_to_map(rules);
+        let foo_token = Token {
+            head: "FOO".to_owned(),
+            body: "foo".to_owned(),
+        };
+        let bar_token = Token {
+            head: "BAR".to_owned(),
+            body: "bar".to_owned(),
+        };
+        // Valid
+        let tokens1 = vec![foo_token.clone(), bar_token.clone()];
+        // Valid
+        let tokens2 = vec![bar_token.clone()];
+        // Invalid
+        let tokens3 = vec![foo_token.clone()];
+        assert_eq!(
+            build_syntax_tree(tokens1.clone(), rule_map.clone(), None),
+            Ok(MatchNode::Rule {
+                name: "program".to_owned(),
+                children: tokens1
+                    .iter()
+                    .map(|i| MatchNode::Token(i.clone()))
+                    .collect()
+            })
+        );
+        assert_eq!(
+            build_syntax_tree(tokens2.clone(), rule_map.clone(), None),
+            Ok(MatchNode::Rule {
+                name: "program".to_owned(),
+                children: tokens2
+                    .iter()
+                    .map(|i| MatchNode::Token(i.clone()))
+                    .collect()
+            })
+        );
+        assert!(build_syntax_tree(tokens3, rule_map, None).is_err());
     }
 }

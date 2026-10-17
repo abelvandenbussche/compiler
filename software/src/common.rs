@@ -2,18 +2,10 @@
 
 use std::{fmt::Display, str::FromStr};
 
-use crate::{common::Role::VariableIdentifier, grammar::types::Rule};
+use crate::common::Role::VariableIdentifier;
 
-#[derive(Debug, PartialEq)]
-/// Literal values represented in the source code
-pub enum Literal {
-    Char(char),
-    String(String),
-    Int(i128),
-    Float(f64),
-    Bool(bool),
-}
-
+/// Roles that need to be filled in the grammar document so that the compiler can understand how the
+/// language should function
 #[derive(PartialEq, Eq, Debug)]
 pub enum Role {
     VariableIdentifier,
@@ -32,8 +24,20 @@ impl FromStr for Role {
 /// A `Rule` that is linked to a `Role`
 #[derive(PartialEq, Eq, Debug)]
 pub struct RoleLink {
+    /// The name of a rule
     pub rule: String,
+    /// The role that is being linked with a rule
     pub role: Role,
+}
+
+/// Literal values represented in the source code
+#[derive(Debug, PartialEq)]
+pub enum Literal {
+    Char(char),
+    String(String),
+    Int(i128),
+    Float(f64),
+    Bool(bool),
 }
 
 impl Display for Literal {

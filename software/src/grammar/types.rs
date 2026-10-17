@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 
-/// Rules used by the parser to match `terminals` produced by the lexer
+/// Rules used by the compiler that represent the syntax of the language that is defined in the
+/// grammar file
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Rule {
     pub head: String,
     pub body: Option<GrammarNode>,
 }
 
+/// The different kinds of EBNF structures
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum GrammarNode {
     /// Literal characters

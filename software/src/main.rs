@@ -29,6 +29,7 @@ fn main() {
     let RuleSet {
         lexing: lexing_rules,
         parsing: _parsing_rules,
+        roles: _roles,
     } = get_rules(grammar_file_contents);
 
     let mut source_file_contents = String::new();

@@ -1,10 +1,13 @@
 //! This module parses the grammar from the grammar file into rules that the [crate::parsing] can use on the
 //! source code
 
-use crate::grammar::{
-    lexer::{EBNFToken::Semicolon, lex},
-    tree::parse_tokens,
-    types::{GrammarNode, Rule, RuleMap},
+use crate::{
+    common::{Role, RoleLink},
+    grammar::{
+        lexer::{EBNFToken::Semicolon, lex},
+        tree::{RuleOrRole, parse_tokens},
+        types::{GrammarNode, Rule, RuleMap},
+    },
 };
 use std::collections::HashMap;
 
@@ -18,6 +21,7 @@ pub struct RuleSet {
     pub lexing: Vec<Rule>,
     /// Rules used during the parsing phase
     pub parsing: Vec<Rule>,
+    pub roles: Vec<RoleLink>,
 }
 
 /// Parses the program rules and returns them
@@ -29,18 +33,24 @@ pub fn get_rules(ebnf: String) -> RuleSet {
     let tokens = lex(ebnf);
     let mut grammar_rules = vec![];
     let mut token_rules = vec![];
+    let mut roles = vec![];
     for i in split_list_on(tokens, Semicolon) {
-        let new_rule = parse_tokens(i);
-        let new_rule_head = &new_rule.head;
-        if is_lexing_rule(new_rule_head) {
-            token_rules.push(new_rule);
-        } else {
-            grammar_rules.push(new_rule);
+        match parse_tokens(i) {
+            RuleOrRole::Role(new_role) => roles.push(new_role),
+            RuleOrRole::Rule(new_rule) => {
+                let new_rule_head = &new_rule.head;
+                if is_lexing_rule(new_rule_head) {
+                    token_rules.push(new_rule);
+                } else {
+                    grammar_rules.push(new_rule);
+                }
+            }
         }
     }
     RuleSet {
         lexing: token_rules,
         parsing: grammar_rules,
+        roles,
     }
 }
 
@@ -295,6 +305,7 @@ yet = %another
         let RuleSet {
             lexing: lexing_rules,
             parsing: parsing_rules,
+            roles: _,
         } = get_rules(ebnf_input.to_owned());
         assert_eq!(
             lexing_rules,

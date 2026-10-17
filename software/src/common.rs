@@ -30,8 +30,9 @@ impl FromStr for Role {
     }
 }
 /// A `Rule` that is linked to a `Role`
+#[derive(PartialEq, Eq, Debug)]
 pub struct RoleLink {
-    pub rule: Rule,
+    pub rule: String,
     pub role: Role,
 }
 

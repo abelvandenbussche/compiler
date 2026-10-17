@@ -1,23 +1,38 @@
-use crate::grammar::{
-    lexer::EBNFToken::{Literal, *},
-    types::{
-        GrammarNode::{self, Choice, Grouping, Optional, Reference, Sequence, ZeroOrMore},
-        Rule,
+use crate::{
+    common::{Role, RoleLink},
+    grammar::{
+        lexer::EBNFToken::{Literal, *},
+        types::{
+            GrammarNode::{self, Choice, Grouping, Optional, Reference, Sequence, ZeroOrMore},
+            Rule,
+        },
     },
 };
 
 use super::lexer::EBNFToken;
 
+#[derive(PartialEq, Eq, Debug)]
+pub enum RuleOrRole {
+    Rule(Rule),
+    Role(RoleLink),
+}
 /// Parses a stream of tokens into a tree structure
-pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> Rule {
+pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
     // A rule should always start with an identifier
     let body_tokens = tokens.split_off(tokens.iter().position(|i| *i == Equals).unwrap());
     match tokens.into_iter().next() {
-        Some(EBNFToken::Identifier(s)) => Rule {
+        Some(EBNFToken::Identifier(s)) => RuleOrRole::Rule(Rule {
             head: s,
             // Also removes the leading equals
             body: Some(generate_rule_body(&body_tokens[1..body_tokens.len()])),
-        },
+        }),
+        Some(EBNFToken::Role(role)) => {
+            if let Some(EBNFToken::Identifier(ident)) = body_tokens.into_iter().next() {
+                RuleOrRole::Role(RoleLink { rule: ident, role })
+            } else {
+                panic!("Invalid state");
+            }
+        }
         Some(other) => panic!("Unexpected token: {:?}", other),
         None => panic!("Slice does not contain any elements"),
     }
@@ -113,7 +128,7 @@ mod tests {
         lexer::EBNFToken::{self, *},
         tree::{
             GrammarNode::{self, *},
-            Rule, find_matching_delimiter, generate_rule_body, parse_tokens,
+            Rule, RuleOrRole, find_matching_delimiter, generate_rule_body, parse_tokens,
         },
     };
 
@@ -148,7 +163,7 @@ mod tests {
             head: "foo".to_owned(),
             body: Some(GrammarNode::Literal("bar".to_owned())),
         };
-        assert_eq!(parse_tokens(tokens), expected);
+        assert_eq!(parse_tokens(tokens), RuleOrRole::Rule(expected));
     }
     #[test]
     fn simple_tree_from_tokens() {
@@ -177,7 +192,7 @@ mod tests {
                 ZeroOrMore(Box::new(Reference("digit".to_owned()))),
             ])),
         };
-        assert_eq!(parse_tokens(tokens), expected_output);
+        assert_eq!(parse_tokens(tokens), RuleOrRole::Rule((expected_output)));
     }
     #[test]
     fn choice_tree() {
@@ -253,6 +268,6 @@ mod tests {
                 ]))),
             ])),
         };
-        assert_eq!(parse_tokens(tokens), expected_rule);
+        assert_eq!(parse_tokens(tokens), RuleOrRole::Rule(expected_rule));
     }
 }

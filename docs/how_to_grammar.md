@@ -16,6 +16,14 @@ NUMBER = DIGIT, {DIGIT};
 * `"foo"` - Literal characters eg. "if" for an if-statement
 * `foo` - Reference to another [Rule](<how_to_grammar#How to define a rule>)
 
+## Making it functional using tags
+You are nothing with syntax if the language can't function, this is where tags come in.
+Tags are special rules that start with a "$", for example
+```ebnf
+variable_declaration = $var_name, "=", $var_value
+```
+Tags allow the compiler to understand how the syntax represents the language
+
 ## Differentiating between lexing and parsing rules
 To differentiate between rules that describe basic things like:
 numbers, strings, keywords, ...

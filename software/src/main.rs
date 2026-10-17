@@ -1,6 +1,9 @@
 use std::{env::args, fs::File, io::Read, path::PathBuf};
 
-use crate::{grammar::get_rules, lexing::Lexer};
+use crate::{
+    grammar::{RuleSet, get_rules},
+    lexing::Lexer,
+};
 
 mod common;
 mod grammar;
@@ -22,7 +25,12 @@ fn main() {
     grammar_file
         .read_to_string(&mut grammar_file_contents)
         .expect("Failed to read grammar file");
-    let (lexing_rules, _grammar_rules) = get_rules(grammar_file_contents);
+
+    let RuleSet {
+        lexing: lexing_rules,
+        parsing: _parsing_rules,
+    } = get_rules(grammar_file_contents);
+
     let mut source_file_contents = String::new();
     source_file
         .read_to_string(&mut source_file_contents)

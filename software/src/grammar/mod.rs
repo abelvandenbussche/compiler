@@ -12,12 +12,20 @@ mod lexer;
 pub mod tree;
 pub mod types;
 
+/// A set of rule collections, meant to group the different rule types together
+pub struct RuleSet {
+    /// Rules used during the lexing phase
+    pub lexing: Vec<Rule>,
+    /// Rules used during the parsing phase
+    pub parsing: Vec<Rule>,
+}
+
 /// Parses the program rules and returns them
 ///
 /// # What it returns
 /// It returns a tuple containing the token rules and the grammar rules
 /// where the first value are the token rules and the second are the grammar rules
-pub fn get_rules(ebnf: String) -> (Vec<Rule>, Vec<Rule>) {
+pub fn get_rules(ebnf: String) -> RuleSet {
     let tokens = lex(ebnf);
     let mut grammar_rules = vec![];
     let mut token_rules = vec![];
@@ -30,7 +38,10 @@ pub fn get_rules(ebnf: String) -> (Vec<Rule>, Vec<Rule>) {
             grammar_rules.push(new_rule);
         }
     }
-    (token_rules, grammar_rules)
+    RuleSet {
+        lexing: token_rules,
+        parsing: grammar_rules,
+    }
 }
 
 /// Splits the list into multiple lists
@@ -135,7 +146,10 @@ pub fn is_lexing_rule(rule_name: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::grammar::types::{GrammarNode, Rule};
+    use crate::grammar::{
+        RuleSet,
+        types::{GrammarNode, Rule},
+    };
 
     use super::{get_rules, is_lexing_rule, matches_rule, rules_to_map, split_list_on};
 
@@ -278,7 +292,10 @@ foo = "something else";
 BaR = "yet another something else";
 yet = %another
     "#;
-        let (lexing_rules, parsing_rules) = get_rules(ebnf_input.to_owned());
+        let RuleSet {
+            lexing: lexing_rules,
+            parsing: parsing_rules,
+        } = get_rules(ebnf_input.to_owned());
         assert_eq!(
             lexing_rules,
             vec![Rule {

@@ -1,8 +1,8 @@
 //! A module containing common types used in the compiler
 
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
-use crate::grammar::types::Rule;
+use crate::{common::Role::VariableIdentifier, grammar::types::Rule};
 
 #[derive(Debug, PartialEq)]
 /// Literal values represented in the source code
@@ -16,9 +16,19 @@ pub enum Literal {
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum Role {
-    VariableName,
+    VariableIdentifier,
 }
 
+impl FromStr for Role {
+    type Err = &'static str;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // This controls the written name is of each role
+        match s {
+            "@var_ident" => Ok(VariableIdentifier),
+            _ => Err("Invalid role name"),
+        }
+    }
+}
 /// A `Rule` that is linked to a `Role`
 pub struct RoleLink {
     pub rule: Rule,

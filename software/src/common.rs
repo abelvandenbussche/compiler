@@ -1,6 +1,8 @@
-//! A module containing common types used by the compiler
+//! A module containing common types used in the compiler
 
 use std::fmt::Display;
+
+use crate::grammar::types::Rule;
 
 #[derive(Debug, PartialEq)]
 /// Literal values represented in the source code
@@ -10,6 +12,17 @@ pub enum Literal {
     Int(i128),
     Float(f64),
     Bool(bool),
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub enum Role {
+    VariableName,
+}
+
+/// A `Rule` that is linked to a `Role`
+pub struct RoleLink {
+    pub rule: Rule,
+    pub role: Role,
 }
 
 impl Display for Literal {

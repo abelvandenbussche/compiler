@@ -16,13 +16,23 @@ NUMBER = DIGIT, {DIGIT};
 * `"foo"` - Literal characters eg. "if" for an if-statement
 * `foo` - Reference to another [Rule](<how_to_grammar#How to define a rule>)
 
-## Making it functional using tags
-You are nothing with syntax if the language can't function, this is where tags come in.
-Tags are special rules that start with a "$", for example
+## Making it functional using roles
+To make the compiler understand what your syntax represents. You need to define roles for your syntax.
+You do this by writing:
 ```ebnf
-variable_declaration = $var_name, "=", $var_value
+@role = syntax_rule;
 ```
-Tags allow the compiler to understand how the syntax represents the language
+Here the `role` is a language role eg. variable_name.
+`syntax_rule` is a rule that you have previously defined
+For example:
+```ebnf
+letter = "a" | "b" | .. | "z";
+identifier = letter, { letter | "_" };
+
+@var_ident = identifier;
+```
+We define a letter and identifier rule then assign the rule `var_ident` to the identifier rule
+This way we are allowed to assign a rule to multiple roles.
 
 ## Differentiating between lexing and parsing rules
 To differentiate between rules that describe basic things like:

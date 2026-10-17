@@ -1,5 +1,5 @@
 use crate::{
-    common::{Role, RoleLink},
+    common::RoleLink,
     grammar::{
         lexer::EBNFToken::{Literal, *},
         types::{
@@ -11,6 +11,7 @@ use crate::{
 
 use super::lexer::EBNFToken;
 
+/// A union of either a rule or a role
 #[derive(PartialEq, Eq, Debug)]
 pub enum RuleOrRole {
     Rule(Rule),
@@ -27,10 +28,13 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
             body: Some(generate_rule_body(&body_tokens[1..body_tokens.len()])),
         }),
         Some(EBNFToken::Role(role)) => {
-            if let Some(EBNFToken::Identifier(ident)) = body_tokens.into_iter().next() {
-                RuleOrRole::Role(RoleLink { rule: ident, role })
+            if let [Equals, Identifier(ident), Semicolon] = body_tokens.as_slice() {
+                RuleOrRole::Role(RoleLink {
+                    rule: ident.to_owned(),
+                    role,
+                })
             } else {
-                panic!("Invalid state");
+                panic!("Invalid role assignment");
             }
         }
         Some(other) => panic!("Unexpected token: {:?}", other),
@@ -124,11 +128,14 @@ fn find_matching_delimiter(left_idx: usize, list: &[EBNFToken]) -> Option<usize>
 
 #[cfg(test)]
 mod tests {
-    use crate::grammar::{
-        lexer::EBNFToken::{self, *},
-        tree::{
-            GrammarNode::{self, *},
-            Rule, RuleOrRole, find_matching_delimiter, generate_rule_body, parse_tokens,
+    use crate::{
+        common::{Role, RoleLink},
+        grammar::{
+            lexer::EBNFToken::{self, *},
+            tree::{
+                GrammarNode::{self, *},
+                Rule, RuleOrRole, find_matching_delimiter, generate_rule_body, parse_tokens,
+            },
         },
     };
 
@@ -269,5 +276,34 @@ mod tests {
             ])),
         };
         assert_eq!(parse_tokens(tokens), RuleOrRole::Rule(expected_rule));
+    }
+    #[test]
+    fn role_identification() {
+        let tokens = vec![
+            EBNFToken::Role(Role::VariableIdentifier),
+            Equals,
+            Identifier("foo".to_owned()),
+            Semicolon,
+        ];
+        assert_eq!(
+            parse_tokens(tokens),
+            RuleOrRole::Role(RoleLink {
+                rule: "foo".to_owned(),
+                role: Role::VariableIdentifier
+            })
+        )
+    }
+    #[test]
+    #[should_panic]
+    fn invalid_role_identification() {
+        let tokens = vec![
+            EBNFToken::Role(Role::VariableIdentifier),
+            Equals,
+            Identifier("foo".to_owned()),
+            Pipe,
+            EBNFToken::Literal("bar".to_owned()),
+            Semicolon,
+        ];
+        parse_tokens(tokens);
     }
 }

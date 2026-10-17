@@ -1,11 +1,17 @@
+use std::str::FromStr;
+
 use EBNFToken::*;
+
+use crate::common::Role;
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum EBNFToken {
-    /// An identifier that is defined in another rule
+    /// An identifier that is an reference to another rule
     Identifier(String),
     /// Literal characters
     Literal(String),
+    /// Role definitions
+    Role(Role),
     /// [
     LBracket,
     /// ]
@@ -74,8 +80,16 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
             }
             ' ' => {
                 if !in_progress.is_empty() {
-                    // The end of a identifier
-                    let done = Identifier(in_progress);
+                    // The end of an identifier
+                    let done = if in_progress.starts_with('@') {
+                        if let Ok(role) = Role::from_str(&in_progress) {
+                            Role(role)
+                        } else {
+                            panic!("Invalid role name: {in_progress}");
+                        }
+                    } else {
+                        Identifier(in_progress)
+                    };
                     in_progress = String::new();
                     Some(done)
                 } else {
@@ -237,10 +251,6 @@ mod tests {
             vec![Identifier("foo".to_owned()), Equals]
         );
         assert_eq!(
-            lex("%foo =".to_owned()),
-            vec![Identifier("%foo".to_owned()), Equals]
-        );
-        assert_eq!(
             lex("FoO =".to_owned()),
             vec![Identifier("FoO".to_owned()), Equals]
         );
@@ -248,6 +258,24 @@ mod tests {
             lex("FOO =".to_owned()),
             vec![Identifier("FOO".to_owned()), Equals]
         );
+    }
+    #[test]
+    fn role_lexing() {
+        assert_eq!(
+            lex("@var_ident = foo;".to_owned()),
+            vec![
+                Role(Role::VariableIdentifier),
+                Equals,
+                Identifier("foo".to_owned()),
+                Semicolon,
+            ]
+        );
+    }
+    #[test]
+    #[should_panic]
+    fn invalid_role_lexing() {
+        // This should panic because "@var_idant" is not an existing role name, thus this would be
+        lex("@var_idant = foo;".to_owned());
     }
     #[test]
     fn ignore_whitespace() {

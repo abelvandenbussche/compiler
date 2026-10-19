@@ -91,23 +91,45 @@ pub fn rules_to_map(rules: Vec<Rule>) -> RuleMap {
 }
 
 /// Checks wether a there is recursion within a set of rules
-pub fn is_recursive(rule_set: RuleMap) -> bool {
-    /// Tests wether a single rule has a recursive definition
-    fn test_rule_for_recursion(rule_name: &str, rule_body: &GrammarNode, rules: &RuleMap) -> bool {
-        match rule_body {
-            // The main case to worry about
-            GrammarNode::Reference(referenced_rule_name) => {
-                if let Some(referenced_rule_body) = rules.get(referenced_rule_name) {
-                    test_rule_for_recursion(&referenced_rule_name, referenced_rule_body, rules)
-                } else {
-                    false
-                }
-            }
-            // The rest can't be problematic
-            _ => false,
+pub fn contains_recursive(rule_set: RuleMap) -> bool {
+    for (rule_name, rule_body) in &rule_set {
+        if test_rule_for_recursion(rule_name, rule_body, &rule_set) {
+            return true;
         }
     }
-    todo!()
+    false
+}
+
+/// Tests whether a single rule has a recursive definition
+fn test_rule_for_recursion(to_check_name: &str, rule_body: &GrammarNode, rules: &RuleMap) -> bool {
+    match rule_body {
+        // The main case to worry about
+        GrammarNode::Reference(referenced_rule_name) => {
+            // Base case
+            if referenced_rule_name == to_check_name {
+                return true;
+            }
+            if let Some(referenced_rule_body) = rules.get(referenced_rule_name) {
+                test_rule_for_recursion(to_check_name, referenced_rule_body, rules)
+            } else {
+                false
+            }
+        }
+        GrammarNode::Choice(options) | GrammarNode::Sequence(options) => {
+            for i in options {
+                if test_rule_for_recursion(to_check_name, i, rules) {
+                    return true;
+                }
+            }
+            false
+        }
+        GrammarNode::ZeroOrMore(contained)
+        | GrammarNode::Grouping(contained)
+        | GrammarNode::Optional(contained) => {
+            test_rule_for_recursion(to_check_name, contained, rules)
+        }
+        GrammarNode::Literal(_) => false,
+    }
 }
 
 /// Checks whether a certain string matches a given rule
@@ -177,7 +199,7 @@ pub fn is_lexing_rule(rule_name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::grammar::{
-        RuleSet, is_recursive,
+        RuleSet, contains_recursive,
         types::{GrammarNode, Rule},
     };
 
@@ -360,14 +382,26 @@ yet = %another
         let rule_map1 = rules_to_map(vec![
             Rule {
                 head: "foo".to_owned(),
-                body: Some(GrammarNode::Reference("bar".to_owned())),
+                body: Some(GrammarNode::Choice(vec![
+                    GrammarNode::Literal("hello".to_owned()),
+                    GrammarNode::Reference("link".to_owned()),
+                ])),
             },
             Rule {
                 head: "bar".to_owned(),
-                body: Some(GrammarNode::Reference("foo".to_owned())),
+                body: Some(GrammarNode::Grouping(Box::new(GrammarNode::Sequence(
+                    vec![
+                        GrammarNode::Literal("world".to_owned()),
+                        GrammarNode::Reference("foo".to_owned()),
+                    ],
+                )))),
+            },
+            Rule {
+                head: "link".to_owned(),
+                body: Some(GrammarNode::Reference("bar".to_owned())),
             },
         ]);
-        assert!(is_recursive(rule_map1));
+        assert!(contains_recursive(rule_map1));
         let rule_map2 = rules_to_map(vec![
             Rule {
                 head: "foo".to_owned(),
@@ -378,6 +412,6 @@ yet = %another
                 body: Some(GrammarNode::Literal("Hello world".to_owned())),
             },
         ]);
-        assert!(!is_recursive(rule_map2));
+        assert!(!contains_recursive(rule_map2));
     }
 }

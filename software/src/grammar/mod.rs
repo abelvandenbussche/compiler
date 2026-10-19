@@ -2,7 +2,7 @@
 //! source code
 
 use crate::{
-    common::{Role, RoleLink},
+    common::RoleLink,
     grammar::{
         lexer::{EBNFToken::Semicolon, lex},
         tree::{RuleOrRole, parse_tokens},
@@ -90,6 +90,15 @@ pub fn rules_to_map(rules: Vec<Rule>) -> RuleMap {
     map
 }
 
+/// Checks wether a there is recursion within a set of rules
+pub fn is_recursive(rule_set: RuleMap) -> bool {
+    /// Tests wether a single rule has a recursive definition
+    fn test_rule_for_recursion(rule: GrammarNode) -> bool {
+        todo!()
+    }
+    todo!()
+}
+
 /// Checks whether a certain string matches a given rule
 /// returns `None` if it did not find a match and `Some` if it did
 ///
@@ -157,7 +166,7 @@ pub fn is_lexing_rule(rule_name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::grammar::{
-        RuleSet,
+        RuleSet, is_recursive,
         types::{GrammarNode, Rule},
     };
 
@@ -333,5 +342,31 @@ yet = %another
                 }
             ]
         )
+    }
+
+    #[test]
+    fn rule_recursion() {
+        let rule_map1 = rules_to_map(vec![
+            Rule {
+                head: "foo".to_owned(),
+                body: Some(GrammarNode::Reference("bar".to_owned())),
+            },
+            Rule {
+                head: "bar".to_owned(),
+                body: Some(GrammarNode::Reference("foo".to_owned())),
+            },
+        ]);
+        assert!(is_recursive(rule_map1));
+        let rule_map2 = rules_to_map(vec![
+            Rule {
+                head: "foo".to_owned(),
+                body: None,
+            },
+            Rule {
+                head: "bar".to_owned(),
+                body: Some(GrammarNode::Literal("Hello world".to_owned())),
+            },
+        ]);
+        assert!(!is_recursive(rule_map2));
     }
 }

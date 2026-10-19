@@ -33,14 +33,14 @@ fn main() {
         .read_to_string(&mut grammar_file_contents)
         .expect("Failed to read grammar file");
 
-    // Parsing the contents of the grammmar file
+    // Parsing the contents of the grammar file
     let RuleSet {
         lexing: lexing_rules,
         parsing: _parsing_rules,
         roles: _roles,
     } = get_rules(grammar_file_contents);
 
-    // Lexing the the contents of the source file
+    // Lexing the contents of the source file
     let mut lexer = Lexer::new(source_file_contents, lexing_rules);
     while let Some(token) = lexer.next_token() {
         println!("token: {:?}", token);

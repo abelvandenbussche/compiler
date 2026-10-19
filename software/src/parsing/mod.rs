@@ -1,5 +1,5 @@
 //! This module uses the rules from the [EBNF module](crate::grammar) to generate the structure of
-//! the source code.
+//! The source code.
 
 use crate::grammar::{
     is_lexing_rule,

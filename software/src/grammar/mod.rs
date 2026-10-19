@@ -93,8 +93,19 @@ pub fn rules_to_map(rules: Vec<Rule>) -> RuleMap {
 /// Checks wether a there is recursion within a set of rules
 pub fn is_recursive(rule_set: RuleMap) -> bool {
     /// Tests wether a single rule has a recursive definition
-    fn test_rule_for_recursion(rule: GrammarNode) -> bool {
-        todo!()
+    fn test_rule_for_recursion(rule_name: &str, rule_body: &GrammarNode, rules: &RuleMap) -> bool {
+        match rule_body {
+            // The main case to worry about
+            GrammarNode::Reference(referenced_rule_name) => {
+                if let Some(referenced_rule_body) = rules.get(referenced_rule_name) {
+                    test_rule_for_recursion(&referenced_rule_name, referenced_rule_body, rules)
+                } else {
+                    false
+                }
+            }
+            // The rest can't be problematic
+            _ => false,
+        }
     }
     todo!()
 }

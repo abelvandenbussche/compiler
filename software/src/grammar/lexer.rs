@@ -4,6 +4,7 @@ use EBNFToken::*;
 
 use crate::common::Role;
 
+/// The possible ebnf token types
 #[derive(PartialEq, Eq, Debug)]
 pub enum EBNFToken {
     /// An identifier that is an reference to another rule
@@ -39,6 +40,7 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
     // Preprocessing
     const SPECIAL_CHARS: [char; 10] = ['[', ']', '(', ')', '{', '}', '=', ',', ';', '|'];
     let mut processed_ebnf = space_special_chars(&ebnf, &SPECIAL_CHARS);
+
     // Adding a space so that it always finishes the last token
     processed_ebnf.push(' ');
 
@@ -134,19 +136,26 @@ fn remove_quotes(to_strip: &str) -> String {
 fn space_special_chars(original: &str, specials: &[char]) -> String {
     let mut processed = String::new();
     let mut quoting = false;
+    let mut escaped = false;
     // Putting spaces in the string
     for c in original.chars() {
         if quoting {
             processed.push(c);
-            if c == '"' {
+            if c == '\\' {
+                escaped = true;
+                continue;
+            }
+            if c == '"' && !escaped {
                 quoting = false;
             }
+            escaped = false;
             continue;
         } else if c == '"' {
             processed.push(c);
             quoting = true;
             continue;
         }
+
         if !specials.contains(&c) {
             processed.push(c);
             continue;
@@ -169,8 +178,6 @@ fn index_string(str: &str, index: usize) -> Option<char> {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::Literal;
-
     use super::*;
 
     #[test]
@@ -312,6 +319,15 @@ mod tests {
                 Literal("\"".to_owned()),
                 Semicolon
             ]
+        );
+    }
+    #[test]
+    fn spacing_with_escaping() {
+        let input_string = r#"foo = "\"", {bar};"#;
+        let specials = vec!['{', '}'];
+        assert_eq!(
+            space_special_chars(input_string, &specials),
+            r#"foo = "\"", { bar } ;"#.to_owned()
         );
     }
 }

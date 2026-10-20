@@ -107,6 +107,11 @@ fn tokens_match_rule<'a>(
             }
         }
         GrammarNode::Grouping(group) => tokens_match_rule(tokens, group, rules),
-        GrammarNode::Literal(_) => None,
+        GrammarNode::Literal(lit) => {
+            eprintln!(
+                "\x1b[38;2;255;0;0mFound literal: \"\x1b[38;2;100;255;0m{lit}\x1b[38;2;255;0;0m\"  during parsing\x1b[m"
+            );
+            None
+        }
     }
 }

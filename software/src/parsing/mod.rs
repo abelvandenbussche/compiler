@@ -55,7 +55,6 @@ fn tokens_match_rule<'a>(
     rule: &GrammarNode,
     rules: &RuleMap,
 ) -> Option<&'a [Token]> {
-    println!("processing rule: {:?} with {:?}\n", rule, tokens);
     match rule {
         GrammarNode::Sequence(list) => {
             let mut first_index = 0;

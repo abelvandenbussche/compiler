@@ -2,4 +2,14 @@ DIGIT = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0";
 NUMBER = DIGIT, {DIGIT};
 SPACE = " ";
 
+LETTER = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
+valid_char = LETTER | DIGIT | SPACE;
+
+identifier = valid_char, {valid_char | _};
+string = """, {valid_char}, """;
+var_value = string | NUMBER;
+variable_declaration = identifier, "=", var_value, ";";
+
+@var_ident = identifier;
+
 program = {NUMBER, " "};

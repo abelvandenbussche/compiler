@@ -1,8 +1,9 @@
 use std::{env::args, fs::File, io::Read, path::PathBuf};
 
 use crate::{
-    grammar::{RuleSet, get_rules},
+    grammar::{RuleSet, get_rules, rules_to_map},
     lexing::Lexer,
+    parsing::build_syntax_tree,
 };
 
 mod common;
@@ -36,13 +37,19 @@ fn main() {
     // Parsing the contents of the grammar file
     let RuleSet {
         lexing: lexing_rules,
-        parsing: _parsing_rules,
+        parsing: parsing_rules,
         roles: _roles,
     } = get_rules(grammar_file_contents);
 
     // Lexing the contents of the source file
     let mut lexer = Lexer::new(source_file_contents, lexing_rules);
+    let mut tokens = vec![];
     while let Some(token) = lexer.next_token() {
         println!("token: {:?}", token);
+        tokens.push(token);
     }
+
+    // parsing the tokens
+    let tree = build_syntax_tree(tokens, rules_to_map(parsing_rules), None);
+    println!("build up tree: {:?}", tree);
 }

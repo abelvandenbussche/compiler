@@ -55,7 +55,7 @@ fn tokens_match_rule<'a>(
     rule: &GrammarNode,
     rules: &RuleMap,
 ) -> Option<&'a [Token]> {
-    println!("matching: {:?}", rule);
+    println!("processing rule: {:?} with {:?}\n", rule, tokens);
     match rule {
         GrammarNode::Sequence(list) => {
             let mut first_index = 0;
@@ -69,7 +69,6 @@ fn tokens_match_rule<'a>(
             Some(&tokens[..first_index])
         }
         GrammarNode::Reference(reference) => {
-            println!("reference");
             if is_lexing_rule(reference) {
                 if tokens.is_empty() {
                     return None;

@@ -54,6 +54,10 @@ pub fn get_rules(ebnf: String) -> RuleSet {
         panic!("User defined rules have recursive definition");
     }
 
+    println!(
+        "rules: token: {:?}\n parsing: {:?}\n roles: {:?}",
+        token_rules, grammar_rules, roles
+    );
     RuleSet {
         lexing: token_rules,
         parsing: grammar_rules,

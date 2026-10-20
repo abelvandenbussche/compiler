@@ -47,6 +47,13 @@ pub fn get_rules(ebnf: String) -> RuleSet {
             }
         }
     }
+    // Checking these rules for recursion
+    let mut all_rules = rules_to_map(token_rules.clone());
+    all_rules.extend(rules_to_map(grammar_rules.clone()));
+    if contains_recursive(all_rules) {
+        panic!("User defined rules have recursive definition");
+    }
+
     RuleSet {
         lexing: token_rules,
         parsing: grammar_rules,
@@ -413,5 +420,15 @@ yet = %another
             },
         ]);
         assert!(!contains_recursive(rule_map2));
+    }
+    #[test]
+    #[should_panic(expected = "User defined rules have recursive definition")]
+    fn recursive_def_rule_getting() {
+        let ebnf = r#"
+foo = "hello world" | ("test", bar);
+bar = {(foo, "rust")};
+            "#
+        .to_owned();
+        get_rules(ebnf);
     }
 }

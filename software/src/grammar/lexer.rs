@@ -39,13 +39,14 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
     // Preprocessing
     const SPECIAL_CHARS: [char; 10] = ['[', ']', '(', ')', '{', '}', '=', ',', ';', '|'];
     let mut processed_ebnf = space_special_chars(&ebnf, &SPECIAL_CHARS);
-    // Adding a space so that it always finnishes the last token
+    // Adding a space so that it always finishes the last token
     processed_ebnf.push(' ');
 
     // Parsing
     let mut tokens = vec![];
     let mut in_progress = String::new();
     let mut quoting = false;
+    let mut escaping = false;
     for c in processed_ebnf.chars() {
         // When we are quoting we accept every character
         if quoting {
@@ -63,7 +64,15 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
         if c.is_whitespace() && c != ' ' {
             continue;
         }
+        if escaping {
+            in_progress.push(c);
+            escaping = false;
+        }
         let result = match c {
+            '\\' => {
+                escaping = true;
+                None
+            }
             '[' => Some(LBracket),
             ']' => Some(RBracket),
             '{' => Some(LBrace),
@@ -160,6 +169,8 @@ fn index_string(str: &str, index: usize) -> Option<char> {
 
 #[cfg(test)]
 mod tests {
+    use crate::common::Literal;
+
     use super::*;
 
     #[test]
@@ -288,6 +299,18 @@ mod tests {
                 Pipe,
                 Literal("everything".to_owned()),
                 Semicolon,
+            ]
+        );
+    }
+    #[test]
+    fn escape_test() {
+        assert_eq!(
+            lex(r#"foo = "\"""#.to_owned()),
+            vec![
+                Identifier("foo".to_owned()),
+                Equals,
+                Literal("\"".to_owned()),
+                Semicolon
             ]
         );
     }

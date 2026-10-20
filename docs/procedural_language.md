@@ -34,4 +34,4 @@ statement = ... | ... | ...
 ```
 
 # Combined compiler
-We could define multiple custom EBNF rules for things like classes, functions and such that the user could write syntax for and customize. This would allow for abstractnes that where the user can define the language but also allow classes and such.
+We could define multiple custom EBNF rules for things like classes, functions and such that the user could write syntax for and customize. This would allow for abstractness that where the user can define the language but also allow classes and such.

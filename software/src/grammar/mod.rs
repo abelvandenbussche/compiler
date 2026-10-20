@@ -1,5 +1,5 @@
 //! This module parses the grammar from the grammar file into rules that the [crate::parsing] can use on the
-//! source code
+//! Source code
 
 use crate::{
     common::RoleLink,
@@ -90,7 +90,7 @@ pub fn rules_to_map(rules: Vec<Rule>) -> RuleMap {
     map
 }
 
-/// Checks wether a there is recursion within a set of rules
+/// Checks whether a there is recursion within a set of rules
 pub fn contains_recursive(rule_set: RuleMap) -> bool {
     for (rule_name, rule_body) in &rule_set {
         if test_rule_for_recursion(rule_name, rule_body, &rule_set) {

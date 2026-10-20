@@ -21,7 +21,7 @@ pub enum GrammarNode {
     Optional(Box<GrammarNode>),
     /// 0 or more of a node
     ZeroOrMore(Box<GrammarNode>),
-    /// Groupes multiple nodes together
+    /// Groups multiple nodes together
     Grouping(Box<GrammarNode>),
     /// Choice of a single node
     Choice(Vec<GrammarNode>),

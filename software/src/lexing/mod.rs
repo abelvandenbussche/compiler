@@ -1,5 +1,5 @@
 //! This module converts the characters read from a file into tokens that are more easily parsed by
-//! the [crate::parsing]
+//! The [crate::parsing]
 
 use crate::{grammar::types::Rule, lexing::matching::LexerMatcher};
 

@@ -1,5 +1,5 @@
 //! Contains the matching struct to match raw source code with the generated grammar rules. Used by
-//! the [lexing](crate::lexing) phase to generate tokens
+//! The [lexing](crate::lexing) phase to generate tokens
 use std::collections::HashMap;
 
 use crate::{

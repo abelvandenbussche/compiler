@@ -1,5 +1,5 @@
-//! This module parses the grammar from the grammar file into rules that the [crate::parsing] can use on the
-//! Source code
+//! This module parses the grammar from the grammar file into rules that the [crate::parsing] and [crate::lexing]
+//! Can use on the source code
 
 use crate::{
     common::RoleLink,
@@ -187,7 +187,6 @@ pub fn matches_rule<'a>(text: &'a str, rule: &GrammarNode, rules: &RuleMap) -> O
             Some(&text[..range])
         }
         GrammarNode::Optional(option) => {
-            // TODO: write better tests for this
             if let Some(match_slice) = matches_rule(text, option, rules) {
                 Some(match_slice)
             } else {

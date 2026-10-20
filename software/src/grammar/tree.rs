@@ -28,12 +28,15 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
             body: Some(generate_rule_body(&body_tokens[1..body_tokens.len()])),
         }),
         Some(EBNFToken::Role(role)) => {
-            if let [Equals, Identifier(ident), Semicolon] = body_tokens.as_slice() {
+            if let [Equals, Identifier(ident), Semicolon] | [Equals, Identifier(ident)] =
+                body_tokens.as_slice()
+            {
                 RuleOrRole::Role(RoleLink {
                     rule: ident.to_owned(),
                     role,
                 })
             } else {
+                eprintln!("body tokens: {:?}", body_tokens);
                 panic!("Invalid role assignment");
             }
         }

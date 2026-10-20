@@ -202,7 +202,7 @@ mod tests {
                 ZeroOrMore(Box::new(Reference("digit".to_owned()))),
             ])),
         };
-        assert_eq!(parse_tokens(tokens), RuleOrRole::Rule((expected_output)));
+        assert_eq!(parse_tokens(tokens), RuleOrRole::Rule(expected_output));
     }
     #[test]
     fn choice_tree() {

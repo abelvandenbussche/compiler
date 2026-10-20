@@ -42,21 +42,29 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
     // Adding a space so that it always finishes the last token
     processed_ebnf.push(' ');
 
-    // Parsing
+    // The tokens that have already been lexed
     let mut tokens = vec![];
+    // The currently in progress string for quotes and references
     let mut in_progress = String::new();
+    // Keeps track of whether we are quoting
     let mut quoting = false;
-    let mut escaping = false;
+    // Keeps track of whether the next character should be escaped
+    let mut escaped = false;
     for c in processed_ebnf.chars() {
         // When we are quoting we accept every character
         if quoting {
-            if c == '"' {
+            if !escaped && c == '\\' {
+                escaped = true;
+                continue;
+            }
+            if c == '"' && !escaped {
                 let stripped = remove_quotes(&in_progress);
                 quoting = false;
                 in_progress = String::new();
                 tokens.push(Literal(stripped));
             } else {
                 in_progress.push(c);
+                escaped = false;
             }
             continue;
         }
@@ -64,15 +72,7 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
         if c.is_whitespace() && c != ' ' {
             continue;
         }
-        if escaping {
-            in_progress.push(c);
-            escaping = false;
-        }
         let result = match c {
-            '\\' => {
-                escaping = true;
-                None
-            }
             '[' => Some(LBracket),
             ']' => Some(RBracket),
             '{' => Some(LBrace),
@@ -305,7 +305,7 @@ mod tests {
     #[test]
     fn escape_test() {
         assert_eq!(
-            lex(r#"foo = "\"""#.to_owned()),
+            lex(r#"foo = "\"";"#.to_owned()),
             vec![
                 Identifier("foo".to_owned()),
                 Equals,

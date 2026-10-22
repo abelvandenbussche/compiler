@@ -39,13 +39,27 @@ impl LexerMatcher {
         }
         // Selecting the best
         let mut best: Option<(&String, &str)> = None;
-        for (k, e) in result_map.into_iter() {
-            if let Some((_best_k, best_e)) = best {
-                if e.chars().count() > best_e.chars().count() {
-                    best = Some((k, e));
+        for (k, i) in result_map.into_iter() {
+            if let Some(rule) = self.rules.get(k) {
+                best = if let Some((best_k, best_i)) = best
+                    && let Some(best_rule) = self.rules.get(best_k)
+                {
+                    let best_depth = get_rule_depth(best_rule, &self.rules);
+                    let depth = get_rule_depth(rule, &self.rules);
+
+                    // More depth = higher up in the rule hierarchy
+                    // Eg. word contains letter so it is higher up and thus prioritised
+                    if depth > best_depth {
+                        Some((k, i))
+                    // Tie breaking
+                    } else if depth == best_depth && i.chars().count() > best_i.chars().count() {
+                        Some((k, i))
+                    } else {
+                        best
+                    }
+                } else {
+                    Some((k, i))
                 }
-            } else {
-                best = Some((k, e))
             }
         }
         // building the token

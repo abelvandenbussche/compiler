@@ -4,8 +4,11 @@ use std::collections::HashMap;
 
 use crate::{
     grammar::{
-        matches_rule, rules_to_map,
-        types::{Rule, RuleMap},
+        RuleSet, contains_recursive, matches_rule, rules_to_map,
+        types::{
+            GrammarNode::{self, Choice, Literal, Optional, Reference, Sequence, ZeroOrMore},
+            Rule, RuleMap,
+        },
     },
     lexing::Token,
 };
@@ -54,11 +57,43 @@ impl LexerMatcher {
     }
 }
 
+/// Calculates how deep the references go for a certain rule
+fn get_rule_depth(rule: &GrammarNode, rules: &RuleMap) -> u32 {
+    /// Recursive inner function of `get_rule_depth`
+    fn calc_depth(rule: &GrammarNode, rules: &RuleMap, current_depth: u32) -> u32 {
+        match rule {
+            Reference(reference) => {
+                let referenced_rule = &rules[reference];
+                calc_depth(referenced_rule, rules, current_depth) + 1
+            }
+            Sequence(vector) | Choice(vector) => {
+                let mut max = 0;
+                for i in vector {
+                    let depth = calc_depth(&i, rules, current_depth);
+                    max = max.max(depth);
+                }
+                max
+            }
+            Optional(value) | ZeroOrMore(value) | GrammarNode::Grouping(value) => {
+                calc_depth(value, rules, current_depth)
+            }
+            Literal(_) => 0,
+        }
+    }
+    calc_depth(rule, rules, 0)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
-        grammar::types::{GrammarNode, Rule},
-        lexing::{Token, matching::LexerMatcher},
+        grammar::{
+            rules_to_map,
+            types::{GrammarNode, Rule},
+        },
+        lexing::{
+            Token,
+            matching::{LexerMatcher, get_rule_depth},
+        },
     };
     #[test]
     fn best_match() {
@@ -79,6 +114,41 @@ mod tests {
                 head: "RULE2".to_owned(),
                 body: "Hello wo".to_owned()
             })
+        );
+    }
+    #[test]
+    fn test_rule_depth() {
+        let rules = vec![
+            Rule {
+                head: "foo".to_owned(),
+                body: Some(GrammarNode::Reference("bar".to_owned())),
+            },
+            Rule {
+                head: "bar".to_owned(),
+                body: Some(GrammarNode::Sequence(vec![
+                    GrammarNode::Reference("random".to_owned()),
+                    GrammarNode::Reference("another".to_owned()),
+                ])),
+            },
+            Rule {
+                head: "random".to_owned(),
+                body: Some(GrammarNode::Literal("Hello world".to_owned())),
+            },
+            Rule {
+                head: "another".to_owned(),
+                body: Some(GrammarNode::Optional(Box::new(GrammarNode::Reference(
+                    "yet another".to_owned(),
+                )))),
+            },
+            Rule {
+                head: "yet another".to_owned(),
+                body: Some(GrammarNode::Literal("Testing".to_owned())),
+            },
+        ];
+        let rule_map = rules_to_map(rules.clone());
+        assert_eq!(
+            get_rule_depth(&rules[0].body.clone().unwrap(), &rule_map),
+            3
         );
     }
 }

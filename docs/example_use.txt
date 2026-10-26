@@ -1,2 +1,1 @@
-foo = "Hello, world";
-bar = 123;
+foo = "hello world";

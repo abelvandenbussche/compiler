@@ -2,23 +2,24 @@ DIGIT = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0";
 NUMBER = DIGIT, {DIGIT};
 SPACE = " ";
 WHITESPACE_CHAR = SPACE;
+WHITESPACE = WHITESPACE_CHAR, {WHITESPACE_CHAR};
 
 EQUALS = "=";
+UNDERSCORE = "_";
 SEMICOLON = ";";
 QUOTATION_MARK = "\"";
 
 LETTER = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
 
-whitespace = WHITESPACE_CHAR, {WHITESPACE_CHAR};
-valid_char = LETTER | DIGIT | SPACE;
-identifier = valid_char, {valid_char | _};
+valid_char = LETTER | DIGIT | WHITESPACE;
+identifier = valid_char, {valid_char | UNDERSCORE};
 string = QUOTATION_MARK, {valid_char}, QUOTATION_MARK;
 
 var_value = string | NUMBER;
-variable_declaration = identifier, [whitespace], EQUALS, [whitespace], var_value;
+variable_declaration = identifier, [WHITESPACE], EQUALS, [WHITESPACE], var_value;
 
 statement = variable_declaration, SEMICOLON;
 
 @var_ident = identifier;
 
-program = {statement};
+program = statement;

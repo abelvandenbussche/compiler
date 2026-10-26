@@ -11,6 +11,8 @@ mod grammar;
 mod ir_generation;
 mod lexing;
 mod parsing;
+#[cfg(test)]
+mod tests;
 
 /// The main function of the compiler, it orchestrates everything that happens on a high level
 fn main() {

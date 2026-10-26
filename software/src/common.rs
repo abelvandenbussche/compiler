@@ -52,3 +52,19 @@ impl Display for Literal {
         f.write_str(string)
     }
 }
+
+/// Possible actions that can be used when setting terminal colors
+pub enum ColorAction {
+    ForeGroundRGB(u8, u8, u8),
+    BackGroundRGB(u8, u8, u8),
+    Reset,
+}
+
+/// Returns a text color escape sequence
+pub fn set_text_color(color: ColorAction) -> String {
+    match color {
+        ColorAction::ForeGroundRGB(r, g, b) => format!("\x1b[38;2;{r};{g};{b}m"),
+        ColorAction::BackGroundRGB(r, g, b) => format!("\x1b[48;2;{r};{g};{b}m"),
+        ColorAction::Reset => String::from("\x1b[m"),
+    }
+}

@@ -1,46 +1,35 @@
 # Compiler workings
-## General overview
-```mermaid
-flowchart TD
-A[/Source code/]
-B[[Tokenization]]
-H[[Match tree]]
-C[[AST]]
-G[Catch syntax errors]
-D[[IR]]
-E[[Optimise]]
-F[\Machine code\]
-
-AB[/EBNF grammar rules/]
-BB[[Grammar parsing]]
-
-A --> B
-B --> H
-H --> C
-C --> D
-C -.-> G
-D --> E
-E --Not Done--> D
-E --Done--> F
-
-AB --> BB
-BB --> H
-```
-
-## Precise workings
 ```mermaid 
 flowchart TD
 
-lexing[Lex EBNF grammar file into tokens]
+grammar_lexing[Lex EBNF grammar file into tokens]
 rule_gen[Generate rules from tokens]
 
 source_code[/Read source code/]
-rule_matching[Match source code with lexing rules]
+source_lexing[Match source code with lexing rules]
 
 build_tree[Build syntax tree by matching Lexing tokens with parsing rules]
 
-lexing --> rule_gen
-rule_gen --> |Token rules| rule_matching
-source_code --> |Raw text| rule_matching
-rule_matching --> |Lexing tokens| build_tree
+grammar_lexing --> rule_gen
+rule_gen --> |Lexing rules| source_lexing
+source_code --> |Raw source code| source_lexing
+source_lexing --> |Lexing tokens| build_tree
+rule_gen -.-> |Parsing rules| build_tree
 ``` 
+
+# Program flow
+```mermaid
+flowchart TD
+start((start))
+EBNF[[EBNF]]
+lexing[[lexing]]
+parsing[[parsing]]
+IR[[IR]]
+stop((stop))
+
+start --> EBNF
+EBNF --> lexing
+lexing --> parsing
+parsing --> IR
+IR --> stop
+```

@@ -3,8 +3,9 @@
 use std::collections::HashMap;
 
 use crate::{
+    common::{ColorAction, set_text_color},
     grammar::{
-        RuleSet, contains_recursive, matches_rule, rules_to_map,
+        matches_rule, rules_to_map,
         types::{
             GrammarNode::{self, Choice, Literal, Optional, Reference, Sequence, ZeroOrMore},
             Rule, RuleMap,

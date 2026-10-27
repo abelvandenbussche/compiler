@@ -63,6 +63,13 @@ program = {variable_decl};
                                     head: "LETTER".to_owned(),
                                     body: "a".to_owned()
                                 })]
+                            },
+                            MatchNode::Rule {
+                                name: "valid_char".to_owned(),
+                                children: vec![MatchNode::Token(Token {
+                                    head: "LETTER".to_owned(),
+                                    body: "r".to_owned()
+                                })]
                             }
                         ]
                     },

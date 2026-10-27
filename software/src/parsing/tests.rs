@@ -33,7 +33,13 @@ fn tokens_matching_rule() {
     let rules_map = rules_to_map(vec![program_rule]);
     assert_eq!(
         tokens_match_rule(&input_tokens, &rules_map["program"], &rules_map),
-        Some(&input_tokens[..2])
+        Some((
+            vec![
+                MatchNode::Token(input_tokens[0].clone()),
+                MatchNode::Token(input_tokens[1].clone())
+            ],
+            2
+        ))
     );
 }
 

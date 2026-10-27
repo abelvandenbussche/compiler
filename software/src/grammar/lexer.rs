@@ -1,8 +1,7 @@
+use EBNFToken::*;
 use std::str::FromStr;
 
-use EBNFToken::*;
-
-use crate::common::Role;
+use crate::parsing::role::Role;
 
 /// The possible ebnf token types
 #[derive(PartialEq, Eq, Debug)]

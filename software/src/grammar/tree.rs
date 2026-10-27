@@ -132,7 +132,7 @@ fn find_matching_delimiter(left_idx: usize, list: &[EBNFToken]) -> Option<usize>
 #[cfg(test)]
 mod tests {
     use crate::{
-        common::{Role, RoleLink},
+        common::RoleLink,
         grammar::{
             lexer::EBNFToken::{self, *},
             tree::{
@@ -140,6 +140,7 @@ mod tests {
                 Rule, RuleOrRole, find_matching_delimiter, generate_rule_body, parse_tokens,
             },
         },
+        parsing::role::Role,
     };
 
     #[test]

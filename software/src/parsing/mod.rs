@@ -8,6 +8,7 @@ use crate::grammar::{
 
 use super::lexing::Token;
 
+pub mod role;
 #[cfg(test)]
 mod tests;
 

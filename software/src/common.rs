@@ -1,26 +1,8 @@
 //! A module containing common types used in the compiler
 
-use std::{fmt::Display, str::FromStr};
+use crate::parsing::role::Role;
+use std::fmt::Display;
 
-use crate::common::Role::VariableIdentifier;
-
-/// Roles that need to be filled in the grammar document so that the compiler can understand how the
-/// language should function
-#[derive(PartialEq, Eq, Debug)]
-pub enum Role {
-    VariableIdentifier,
-}
-
-impl FromStr for Role {
-    type Err = &'static str;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // This controls the written name is of each role
-        match s {
-            "@var_ident" => Ok(VariableIdentifier),
-            _ => Err("Invalid role name"),
-        }
-    }
-}
 /// A `Rule` that is linked to a `Role`
 #[derive(PartialEq, Eq, Debug)]
 pub struct RoleLink {

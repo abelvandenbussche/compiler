@@ -11,6 +11,7 @@ main
  │   ├─ matching
  │   └─ tests
  ├─ parsing
+ │   ├─ role
  │   └─ tests
  ├─ ir_generation
  └─ tests

@@ -28,6 +28,9 @@ mindmap
 root((compiler))
   Procedural syntax
     EBNF
+      parsing rules
+      lexing rules
+      assigned roles
     Predefined components
   Features
     Basic

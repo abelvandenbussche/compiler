@@ -50,10 +50,9 @@ impl LexerMatcher {
 
                     // More depth = higher up in the rule hierarchy
                     // Eg. word contains letter so it is higher up and thus prioritised
-                    if depth > best_depth {
-                        Some((k, i))
-                    // Tie breaking
-                    } else if depth == best_depth && i.chars().count() > best_i.chars().count() {
+                    if depth > best_depth
+                        || depth == best_depth && i.chars().count() > best_i.chars().count()
+                    {
                         Some((k, i))
                     } else {
                         best
@@ -75,27 +74,27 @@ impl LexerMatcher {
 /// Calculates how deep the references go for a certain rule
 fn get_rule_depth(rule: &GrammarNode, rules: &RuleMap) -> u32 {
     /// Recursive inner function of `get_rule_depth`
-    fn calc_depth(rule: &GrammarNode, rules: &RuleMap, current_depth: u32) -> u32 {
+    fn calc_depth(rule: &GrammarNode, rules: &RuleMap) -> u32 {
         match rule {
             Reference(reference) => {
                 let referenced_rule = &rules[reference];
-                calc_depth(referenced_rule, rules, current_depth) + 1
+                calc_depth(referenced_rule, rules) + 1
             }
             Sequence(vector) | Choice(vector) => {
-                let mut max = 0;
+                let mut current_max = 0;
                 for i in vector {
-                    let depth = calc_depth(&i, rules, current_depth);
-                    max = max.max(depth);
+                    let depth = calc_depth(i, rules);
+                    current_max = current_max.max(depth);
                 }
-                max
+                current_max
             }
             Optional(value) | ZeroOrMore(value) | GrammarNode::Grouping(value) => {
-                calc_depth(value, rules, current_depth)
+                calc_depth(value, rules)
             }
             Literal(_) => 0,
         }
     }
-    calc_depth(rule, rules, 0)
+    calc_depth(rule, rules)
 }
 
 #[cfg(test)]

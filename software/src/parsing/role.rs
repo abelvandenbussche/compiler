@@ -8,6 +8,8 @@ use std::str::FromStr;
 #[derive(PartialEq, Eq, Debug)]
 pub enum Role {
     VariableIdentifier,
+    VariableValue,
+    VariableDeclaration,
 }
 
 impl FromStr for Role {
@@ -16,6 +18,8 @@ impl FromStr for Role {
         // This controls the written name is of each role
         match s {
             "@var_ident" => Ok(VariableIdentifier),
+            "@var_decl" => Ok(VariableDeclaration),
+            "@var_val" => Ok(VariableValue),
             _ => Err("Invalid role name"),
         }
     }

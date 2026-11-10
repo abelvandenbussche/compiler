@@ -9,7 +9,7 @@ pub struct RoleLink {
     /// The name of a rule
     pub rule: String,
     /// The role that is being linked with a rule
-    pub role: Role,
+    pub role: Box<dyn Role>,
 }
 
 /// Literal values represented in the source code

@@ -1,26 +1,14 @@
 //! Module containing the `Role` enum and its implementations
 
-use Role::*;
-use std::str::FromStr;
-
-/// Roles that need to be filled in the grammar document so that the compiler can understand how the
-/// language should function
-#[derive(PartialEq, Eq, Debug)]
-pub enum Role {
-    VariableIdentifier,
-    VariableValue,
-    VariableDeclaration,
+pub trait Role: Eq + PartialEq {
+    /// This should return the name of the role for in the EBNF syntax
+    fn get_role_def_string(&self) -> String;
 }
 
-impl FromStr for Role {
-    type Err = &'static str;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // This controls the written name is of each role
-        match s {
-            "@var_ident" => Ok(VariableIdentifier),
-            "@var_decl" => Ok(VariableDeclaration),
-            "@var_val" => Ok(VariableValue),
-            _ => Err("Invalid role name"),
-        }
+#[derive(PartialEq, Eq)]
+pub struct VariableIdentifier {}
+impl Role for VariableIdentifier {
+    fn get_role_def_string(&self) -> String {
+        return "@var_ident".to_owned();
     }
 }

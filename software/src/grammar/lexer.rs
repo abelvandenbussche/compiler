@@ -32,6 +32,8 @@ pub enum EBNFToken {
     Semicolon,
     /// |
     Pipe,
+    /// :
+    Colon,
 }
 
 /// Lexes the EBNF into a sequence of tokens
@@ -92,10 +94,9 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
                 if !in_progress.is_empty() {
                     // The end of an identifier
                     let done = if in_progress.starts_with('@') {
-                        if let Ok(role) = Role::from_str(&in_progress) {
-                            Role(role)
-                        } else {
-                            panic!("Invalid role name: {in_progress}");
+                        match in_progress {
+                            "@var_decl" => Role(Role::VariableDeclaration { identifier: (), value: () })
+                            _ => panic!("Invalid role name: {in_progress}"),
                         }
                     } else {
                         Identifier(in_progress)

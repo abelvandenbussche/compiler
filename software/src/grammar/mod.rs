@@ -2,12 +2,12 @@
 //! Can use on the source code
 
 use crate::{
-    common::RoleLink,
     grammar::{
         lexer::{EBNFToken::Semicolon, lex},
         tree::{RuleOrRole, parse_tokens},
         types::{GrammarNode, Rule, RuleMap},
     },
+    parsing::role::RoleAssignment,
 };
 use std::collections::HashMap;
 
@@ -21,7 +21,7 @@ pub struct RuleSet {
     pub lexing: Vec<Rule>,
     /// Rules used during the parsing phase
     pub parsing: Vec<Rule>,
-    pub roles: Vec<RoleLink>,
+    pub roles: Vec<RoleAssignment>,
 }
 
 /// Parses the program rules and returns them

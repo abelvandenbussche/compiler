@@ -1,5 +1,4 @@
 use crate::{
-    common::RoleLink,
     grammar::{
         lexer::EBNFToken::{Literal, *},
         types::{
@@ -7,6 +6,7 @@ use crate::{
             Rule,
         },
     },
+    parsing::role::RoleAssignment,
 };
 
 use super::lexer::EBNFToken;
@@ -15,7 +15,7 @@ use super::lexer::EBNFToken;
 #[derive(PartialEq, Eq, Debug)]
 pub enum RuleOrRole {
     Rule(Rule),
-    Role(RoleLink),
+    Role(RoleAssignment),
 }
 /// Parses a stream of tokens into a tree structure
 pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
@@ -31,8 +31,8 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
             if let [Equals, Identifier(ident), Semicolon] | [Equals, Identifier(ident)] =
                 body_tokens.as_slice()
             {
-                RuleOrRole::Role(RoleLink {
-                    rule: ident.to_owned(),
+                RuleOrRole::Role(RoleAssignment {
+                    assigned_rule: ident.to_owned(),
                     role,
                 })
             } else {
@@ -132,7 +132,6 @@ fn find_matching_delimiter(left_idx: usize, list: &[EBNFToken]) -> Option<usize>
 #[cfg(test)]
 mod tests {
     use crate::{
-        common::RoleLink,
         grammar::{
             lexer::EBNFToken::{self, *},
             tree::{
@@ -141,6 +140,7 @@ mod tests {
             },
         },
         parsing::role::Role,
+        parsing::role::RoleAssignment,
     };
 
     #[test]
@@ -291,8 +291,8 @@ mod tests {
         ];
         assert_eq!(
             parse_tokens(tokens),
-            RuleOrRole::Role(RoleLink {
-                rule: "foo".to_owned(),
+            RuleOrRole::Role(RoleAssignment {
+                assigned_rule: "foo".to_owned(),
                 role: Role::VariableIdentifier
             })
         )

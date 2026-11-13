@@ -1,16 +1,6 @@
 //! A module containing common types used in the compiler
 
-use crate::parsing::role::Role;
 use std::fmt::Display;
-
-/// A `Rule` that is linked to a `Role`
-#[derive(PartialEq, Eq, Debug)]
-pub struct RoleLink {
-    /// The name of a rule
-    pub rule: String,
-    /// The role that is being linked with a rule
-    pub role: Box<dyn Role>,
-}
 
 /// Literal values represented in the source code
 #[derive(Debug, PartialEq)]

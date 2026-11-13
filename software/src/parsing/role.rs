@@ -1,11 +1,8 @@
 //! Module containing the `Role` enum and its implementations
 
-use std::fmt::Debug;
+use crate::grammar::types::Rule;
 
-pub trait Role: Eq + Debug {}
-
-#[derive(Eq, PartialEq, Debug)]
-pub struct VariableDeclaration {
-    placeholder: String,
+#[derive(Debug, PartialEq, Eq)]
+pub enum Role {
+    VariableDeclaration { identifier: Rule, value: Rule },
 }
-impl Role for VariableDeclaration {}

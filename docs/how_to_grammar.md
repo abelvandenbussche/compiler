@@ -28,11 +28,13 @@ For example:
 ```ebnf
 letter = "a" | "b" | .. | "z";
 identifier = letter, { letter | "_" };
+value =
 
-@var_ident = identifier;
+variable_declaration = "let", var_ident: identifier, "=", var_val: value;
+
+@var_decl = 
 ```
-We define a letter and identifier rule then assign the rule `var_ident` to the identifier rule
-This way we are allowed to assign a rule to multiple roles.
+We define rules for an identifier
 
 ## Differentiating between lexing and parsing rules
 To differentiate between rules that describe basic things like:

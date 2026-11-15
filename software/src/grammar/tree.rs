@@ -27,7 +27,7 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
             // Also removes the leading equals
             body: Some(generate_rule_body(&body_tokens[1..body_tokens.len()])),
         }),
-        Some(EBNFToken::Role(role)) => {
+        Some(EBNFToken::Role(role_ident)) => {
             if let [Equals, Identifier(ident), Semicolon] | [Equals, Identifier(ident)] =
                 body_tokens.as_slice()
             {
@@ -280,34 +280,5 @@ mod tests {
             ])),
         };
         assert_eq!(parse_tokens(tokens), RuleOrRole::Rule(expected_rule));
-    }
-    #[test]
-    fn role_identification() {
-        let tokens = vec![
-            EBNFToken::Role(Role::VariableIdentifier),
-            Equals,
-            Identifier("foo".to_owned()),
-            Semicolon,
-        ];
-        assert_eq!(
-            parse_tokens(tokens),
-            RuleOrRole::Role(RoleAssignment {
-                assigned_rule: "foo".to_owned(),
-                role: Role::VariableIdentifier
-            })
-        )
-    }
-    #[test]
-    #[should_panic]
-    fn invalid_role_identification() {
-        let tokens = vec![
-            EBNFToken::Role(Role::VariableIdentifier),
-            Equals,
-            Identifier("foo".to_owned()),
-            Pipe,
-            EBNFToken::Literal("bar".to_owned()),
-            Semicolon,
-        ];
-        parse_tokens(tokens);
     }
 }

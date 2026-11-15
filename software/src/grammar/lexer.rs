@@ -1,7 +1,6 @@
 use EBNFToken::*;
-use std::str::FromStr;
 
-use crate::parsing::role::Role;
+use crate::common::BasicType;
 
 /// The possible ebnf token types
 #[derive(PartialEq, Eq, Debug)]
@@ -10,8 +9,10 @@ pub enum EBNFToken {
     Identifier(String),
     /// Literal characters
     Literal(String),
+    /// Basic type
+    BasicType(BasicType),
     /// Role definitions
-    Role(Role),
+    Role(String),
     /// [
     LBracket,
     /// ]
@@ -32,8 +33,6 @@ pub enum EBNFToken {
     Semicolon,
     /// |
     Pipe,
-    /// :
-    Colon,
 }
 
 /// Lexes the EBNF into a sequence of tokens
@@ -93,11 +92,8 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
             ' ' => {
                 if !in_progress.is_empty() {
                     // The end of an identifier
-                    let done = if in_progress.starts_with('@') {
-                        match in_progress {
-                            "@var_decl" => Role(Role::VariableDeclaration { identifier: (), value: () })
-                            _ => panic!("Invalid role name: {in_progress}"),
-                        }
+                    let done = if in_progress.ends_with(':') {
+                        Role(in_progress)
                     } else {
                         Identifier(in_progress)
                     };
@@ -278,18 +274,6 @@ mod tests {
         );
     }
     #[test]
-    fn role_lexing() {
-        assert_eq!(
-            lex("@var_ident = foo;".to_owned()),
-            vec![
-                Role(Role::VariableIdentifier),
-                Equals,
-                Identifier("foo".to_owned()),
-                Semicolon,
-            ]
-        );
-    }
-    #[test]
     #[should_panic]
     fn invalid_role_lexing() {
         // This should panic because "@var_idant" is not an existing role name, thus this would be
@@ -318,6 +302,19 @@ mod tests {
                 Equals,
                 Literal("\"".to_owned()),
                 Semicolon
+            ]
+        );
+    }
+    #[test]
+    fn role_lexing() {
+        let input_string = "foo: bar = something";
+        assert_eq!(
+            lex(input_string.to_owned()),
+            vec![
+                Role("foo".to_owned()),
+                Identifier("bar".to_owned()),
+                Equals,
+                Identifier("something".to_owned())
             ]
         );
     }

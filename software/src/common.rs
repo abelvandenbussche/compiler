@@ -2,26 +2,24 @@
 
 use std::fmt::Display;
 
-/// Literal values represented in the source code
-#[derive(Debug, PartialEq)]
-pub enum Literal {
-    Char(char),
-    String(String),
-    Int(i128),
-    Float(f64),
-    Bool(bool),
+#[derive(Debug, PartialEq, Eq)]
+pub enum BasicType {
+    Char,
+    Bool,
+    Int,
+    Float,
 }
 
-impl Display for Literal {
+impl Display for BasicType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let string = match self {
-            Self::Bool(bool) => &bool.to_string(),
-            Self::Float(float) => &float.to_string(),
-            Self::Int(int) => &int.to_string(),
-            Self::Char(c) => &c.to_string(),
-            Self::String(s) => s,
+        let stringified = match self {
+            Self::Int => "#int",
+            Self::Float => "#float",
+            Self::Char => "#char",
+            Self::Bool => "#bool",
+            _ => return Err(std::fmt::Error),
         };
-        f.write_str(string)
+        f.write_str(stringified)
     }
 }
 

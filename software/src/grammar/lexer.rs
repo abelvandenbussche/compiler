@@ -94,6 +94,14 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
                     // The end of an identifier
                     let done = if in_progress.ends_with(':') {
                         Role(in_progress)
+                    } else if in_progress.starts_with('#') {
+                        BasicType(match in_progress.as_ref() {
+                            "#int" => BasicType::Int,
+                            "#float" => BasicType::Float,
+                            "#char" => BasicType::Char,
+                            "#bool" => BasicType::Bool,
+                            _ => panic!("Invalid basic type"),
+                        })
                     } else {
                         Identifier(in_progress)
                     };

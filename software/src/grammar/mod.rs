@@ -24,6 +24,13 @@ pub struct RuleSet {
     pub roles: Vec<RoleAssignment>,
 }
 
+/// Similar to `RoleAssignment` but the rule and role are not checked to exist
+#[derive(Debug, PartialEq, Eq)]
+struct UncheckedRoleAssignment {
+    role_name: String,
+    rule_name: String,
+}
+
 /// Parses the program rules and returns them
 ///
 /// # What it returns

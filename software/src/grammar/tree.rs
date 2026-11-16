@@ -1,13 +1,10 @@
-use crate::{
-    grammar::{
-        UncheckedRoleAssignment,
-        lexer::EBNFToken::{Literal, *},
-        types::{
-            GrammarNode::{self, Choice, Grouping, Optional, Reference, Sequence, ZeroOrMore},
-            Rule,
-        },
+use crate::grammar::{
+    UncheckedRoleAssignment,
+    lexer::EBNFToken::{Literal, *},
+    types::{
+        GrammarNode::{self, Choice, Grouping, Optional, Reference, Sequence, ZeroOrMore},
+        Rule,
     },
-    parsing::role::{Role, RoleAssignment},
 };
 
 use super::lexer::EBNFToken;
@@ -32,10 +29,10 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
             if let [Equals, Identifier(ident), Semicolon] | [Equals, Identifier(ident)] =
                 body_tokens.as_slice()
             {
-                RuleOrRole::Role {
+                RuleOrRole::Role(UncheckedRoleAssignment {
                     role_name: role_ident.to_owned(),
                     rule_name: ident.to_owned(),
-                }
+                })
             } else {
                 eprintln!("body tokens: {:?}", body_tokens);
                 panic!("Invalid role assignment");

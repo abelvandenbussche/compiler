@@ -31,10 +31,11 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
             if let [Equals, Identifier(ident), Semicolon] | [Equals, Identifier(ident)] =
                 body_tokens.as_slice()
             {
-                RuleOrRole::Role(RoleAssignment {
-                    assigned_rule: ident.to_owned(),
-                    role,
-                })
+         //     RuleOrRole::Role(RoleAssignment {
+         //         assigned_rule: ident.to_owned(),
+         //         role,
+         //     })
+                todo!();
             } else {
                 eprintln!("body tokens: {:?}", body_tokens);
                 panic!("Invalid role assignment");

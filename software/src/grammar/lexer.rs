@@ -282,12 +282,6 @@ mod tests {
         );
     }
     #[test]
-    #[should_panic]
-    fn invalid_role_lexing() {
-        // This should panic because "@var_idant" is not an existing role name, thus this would be
-        lex("@var_idant = foo;".to_owned());
-    }
-    #[test]
     fn ignore_whitespace() {
         assert_eq!(
             lex("    foo   =something|    \"everything\";".to_owned()),
@@ -313,16 +307,20 @@ mod tests {
             ]
         );
     }
+
     #[test]
-    fn role_lexing() {
-        let input_string = "foo: bar = something";
+    fn basic_types_test() {
+        let input = "foo = #int, [\"test\"]";
         assert_eq!(
-            lex(input_string.to_owned()),
+            lex(input.to_owned()),
             vec![
-                Role("foo".to_owned()),
-                Identifier("bar".to_owned()),
+                Identifier("foo".to_owned()),
                 Equals,
-                Identifier("something".to_owned())
+                BasicType(BasicType::Int),
+                Comma,
+                LBracket,
+                Literal("test".to_owned()),
+                RBracket
             ]
         );
     }

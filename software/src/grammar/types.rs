@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::common::FundamentalType;
+
 /// Rules used by the compiler that represent the syntax of the language that is defined in the
 /// grammar file
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -13,6 +15,8 @@ pub struct Rule {
 pub enum GrammarNode {
     /// Literal characters
     Literal(String),
+    /// Fundamental type
+    FoundamentalType(FundamentalType),
     /// Reference to another rule
     Reference(String),
     /// A sequence of nodes

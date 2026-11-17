@@ -2,15 +2,15 @@
 
 use std::fmt::Display;
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum BasicType {
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum FundamentalType {
     Char,
     Bool,
     Int,
     Float,
 }
 
-impl Display for BasicType {
+impl Display for FundamentalType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let stringified = match self {
             Self::Int => "#int",

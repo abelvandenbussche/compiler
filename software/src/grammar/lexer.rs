@@ -1,6 +1,6 @@
 use EBNFToken::*;
 
-use crate::common::BasicType;
+use crate::common::FundamentalType;
 
 /// The possible ebnf token types
 #[derive(PartialEq, Eq, Debug)]
@@ -9,8 +9,8 @@ pub enum EBNFToken {
     Identifier(String),
     /// Literal characters
     Literal(String),
-    /// Basic type
-    BasicType(BasicType),
+    /// Fundamental type
+    FundamentalType(FundamentalType),
     /// Role definitions
     Role(String),
     /// [
@@ -24,7 +24,7 @@ pub enum EBNFToken {
     /// (
     LParentheses,
     /// )
-    RParenthese,
+    RParentheses,
     /// =
     Equals,
     /// ,
@@ -80,7 +80,7 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
             '{' => Some(LBrace),
             '}' => Some(RBrace),
             '(' => Some(LParentheses),
-            ')' => Some(RParenthese),
+            ')' => Some(RParentheses),
             '=' => Some(Equals),
             ';' => Some(Semicolon),
             ',' => Some(Comma),
@@ -95,12 +95,12 @@ pub fn lex(ebnf: String) -> Vec<EBNFToken> {
                     let done = if in_progress.ends_with(':') {
                         Role(in_progress)
                     } else if in_progress.starts_with('#') {
-                        BasicType(match in_progress.as_ref() {
-                            "#int" => BasicType::Int,
-                            "#float" => BasicType::Float,
-                            "#char" => BasicType::Char,
-                            "#bool" => BasicType::Bool,
-                            _ => panic!("Invalid basic type"),
+                        FundamentalType(match in_progress.as_ref() {
+                            "#int" => FundamentalType::Int,
+                            "#float" => FundamentalType::Float,
+                            "#char" => FundamentalType::Char,
+                            "#bool" => FundamentalType::Bool,
+                            _ => panic!("Invalid fundamental type"),
                         })
                     } else {
                         Identifier(in_progress)
@@ -262,7 +262,7 @@ mod tests {
                 LBrace,
                 RBrace,
                 RBracket,
-                RParenthese
+                RParentheses
             ]
         );
     }
@@ -316,7 +316,7 @@ mod tests {
             vec![
                 Identifier("foo".to_owned()),
                 Equals,
-                BasicType(BasicType::Int),
+                FundamentalType(FundamentalType::Int),
                 Comma,
                 LBracket,
                 Literal("test".to_owned()),

@@ -16,7 +16,7 @@ pub enum GrammarNode {
     /// Literal characters
     Literal(String),
     /// Fundamental type
-    FoundamentalType(FundamentalType),
+    FundamentalType(FundamentalType),
     /// Reference to another rule
     Reference(String),
     /// A sequence of nodes

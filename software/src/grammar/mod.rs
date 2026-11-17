@@ -24,9 +24,10 @@ pub struct RuleSet {
     pub roles: Vec<RoleAssignment>,
 }
 
-/// Similar to `RoleAssignment` but the rule and role are not checked to exist
+/// Similar to `RoleAssignment` but the rule and role do not need to exist
+/// used when first parsing the grammar when it is not possible to make references to rules yet
 #[derive(Debug, PartialEq, Eq)]
-struct UncheckedRoleAssignment {
+pub struct UncheckedRoleAssignment {
     role_name: String,
     rule_name: String,
 }
@@ -41,8 +42,9 @@ pub fn get_rules(ebnf: String) -> RuleSet {
     let mut grammar_rules = vec![];
     let mut token_rules = vec![];
     let mut roles = vec![];
+    let mut inter_roles_map = HashMap::new();
     for i in split_list_on(tokens, Semicolon) {
-        match parse_tokens(i) {
+        match parse_tokens(i, &mut inter_roles_map) {
             RuleOrRole::Role(new_role) => roles.push(new_role),
             RuleOrRole::Rule(new_rule) => {
                 let new_rule_head = &new_rule.head;
@@ -60,12 +62,14 @@ pub fn get_rules(ebnf: String) -> RuleSet {
     if contains_recursive(all_rules) {
         panic!("User defined rules have recursive definition");
     }
+    todo!();
+    // TODO: remove comments
 
-    RuleSet {
-        lexing: token_rules,
-        parsing: grammar_rules,
-        roles,
-    }
+    //  RuleSet {
+    //    lexing: token_rules,
+    //    parsing: grammar_rules,
+    //    roles,
+    //  }
 }
 
 /// Splits the list into multiple lists
@@ -142,7 +146,7 @@ fn test_rule_for_recursion(to_check_name: &str, rule_body: &GrammarNode, rules: 
         | GrammarNode::Optional(contained) => {
             test_rule_for_recursion(to_check_name, contained, rules)
         }
-        GrammarNode::Literal(_) => false,
+        GrammarNode::Literal(_) | GrammarNode::FundamentalType(_) => false,
     }
 }
 
@@ -201,12 +205,27 @@ pub fn matches_rule<'a>(text: &'a str, rule: &GrammarNode, rules: &RuleMap) -> O
             }
         }
         GrammarNode::Grouping(group) => matches_rule(text, group, rules),
+        GrammarNode::FundamentalType(fundamental_type) => todo!(),
     }
 }
 
 /// Returns whether `true` if the rule is a lexing rule and `false` if the rule is another type
 pub fn is_lexing_rule(rule_name: &str) -> bool {
     rule_name.to_uppercase() == rule_name
+}
+
+fn link_roles(unchecked_roles: &[UncheckedRoleAssignment], rules: RuleMap) -> Vec<RoleAssignment> {
+    let role_assignments = vec![];
+    for unchecked_role_assignment in unchecked_roles {
+        // Checking if the rule exists
+        if let Some(rule) = rules.get(&unchecked_role_assignment.rule_name) {
+            match unchecked_role_assignment.role_name.as_ref() {
+                "@var_decl" => {}
+                _ => panic!("Invalid role name: {}", unchecked_role_assignment.role_name),
+            }
+        }
+    }
+    role_assignments
 }
 
 #[cfg(test)]

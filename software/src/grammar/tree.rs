@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::grammar::{
     UncheckedRoleAssignment,
     lexer::EBNFToken::{Literal, *},
@@ -16,14 +18,20 @@ pub enum RuleOrRole {
     Role(UncheckedRoleAssignment),
 }
 /// Parses a stream of tokens into a tree structure
-pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
+pub fn parse_tokens(
+    mut tokens: Vec<EBNFToken>,
+    roles_map: &mut HashMap<String, &GrammarNode>,
+) -> RuleOrRole {
     // A rule should always start with an identifier
     let body_tokens = tokens.split_off(tokens.iter().position(|i| *i == Equals).unwrap());
     match tokens.into_iter().next() {
         Some(EBNFToken::Identifier(s)) => RuleOrRole::Rule(Rule {
             head: s,
             // Also removes the leading equals
-            body: Some(generate_rule_body(&body_tokens[1..body_tokens.len()])),
+            body: Some(generate_rule_body(
+                &body_tokens[1..body_tokens.len()],
+                roles_map,
+            )),
         }),
         Some(EBNFToken::Role(role_ident)) => {
             if let [Equals, Identifier(ident), Semicolon] | [Equals, Identifier(ident)] =
@@ -44,7 +52,10 @@ pub fn parse_tokens(mut tokens: Vec<EBNFToken>) -> RuleOrRole {
 }
 
 /// Takes in a stream of tokens and uses it to generate a `GrammarNode` that is the body of a rule
-fn generate_rule_body(token_stream: &[EBNFToken]) -> GrammarNode {
+fn generate_rule_body(
+    token_stream: &[EBNFToken],
+    role_map: &mut HashMap<String, &GrammarNode>,
+) -> GrammarNode {
     let mut nodes = vec![];
     let mut token_iter = token_stream.iter().enumerate();
     let mut choosing = false;
@@ -53,7 +64,7 @@ fn generate_rule_body(token_stream: &[EBNFToken]) -> GrammarNode {
             LBrace | LBracket | LParentheses => {
                 if let Some(match_location) = find_matching_delimiter(idx, token_stream) {
                     let contained_slice = &token_stream[idx + 1..match_location];
-                    let result = generate_rule_body(contained_slice);
+                    let result = generate_rule_body(contained_slice, role_map);
                     let product = match token {
                         LBrace => ZeroOrMore(Box::new(result)),
                         LBracket => Optional(Box::new(result)),
@@ -85,7 +96,16 @@ fn generate_rule_body(token_stream: &[EBNFToken]) -> GrammarNode {
                     None
                 }
             }
-            _ => None,
+            Role(role) => {
+                let next_node = generate_rule_body(token_stream, role_map);
+                role_map.insert(role.to_owned(), &next_node);
+                Some(next_node)
+            }
+            FundamentalType(fundamental_type) => {
+                Some(GrammarNode::FundamentalType(fundamental_type.clone()))
+            }
+            RBracket | RBrace | RParentheses | Comma | Semicolon => None,
+            Equals => panic!("Unexpected equals at {idx}"),
         };
 
         if let Some(node) = result {
@@ -117,7 +137,7 @@ fn find_matching_delimiter(left_idx: usize, list: &[EBNFToken]) -> Option<usize>
     for (idx, token) in list.iter().enumerate().skip(left_idx) {
         match token {
             LBracket | LBrace | LParentheses => depth += 1,
-            RBracket | RBrace | RParenthese => depth -= 1,
+            RBracket | RBrace | RParentheses => depth -= 1,
             _ => {}
         }
         if depth == 0 {
@@ -129,6 +149,8 @@ fn find_matching_delimiter(left_idx: usize, list: &[EBNFToken]) -> Option<usize>
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use crate::{
         grammar::{
             lexer::EBNFToken::{self, *},
@@ -151,7 +173,7 @@ mod tests {
             LParentheses,
             LBrace,
             RBrace,
-            RParenthese,
+            RParentheses,
             RBracket,
         ];
         assert_eq!(find_matching_delimiter(1, &list), Some(8));
@@ -172,7 +194,10 @@ mod tests {
             head: "foo".to_owned(),
             body: Some(GrammarNode::Literal("bar".to_owned())),
         };
-        assert_eq!(parse_tokens(tokens), RuleOrRole::Rule(expected));
+        assert_eq!(
+            parse_tokens(tokens, &mut HashMap::new()),
+            RuleOrRole::Rule(expected)
+        );
     }
     #[test]
     fn simple_tree_from_tokens() {
@@ -201,7 +226,10 @@ mod tests {
                 ZeroOrMore(Box::new(Reference("digit".to_owned()))),
             ])),
         };
-        assert_eq!(parse_tokens(tokens), RuleOrRole::Rule(expected_output));
+        assert_eq!(
+            parse_tokens(tokens, &mut HashMap::new()),
+            RuleOrRole::Rule(expected_output)
+        );
     }
     #[test]
     fn choice_tree() {
@@ -221,7 +249,7 @@ mod tests {
             GrammarNode::Literal("3".to_owned()),
             GrammarNode::Literal("4".to_owned()),
         ]);
-        assert_eq!(generate_rule_body(&tokens), expected);
+        assert_eq!(generate_rule_body(&tokens, &mut HashMap::new()), expected);
     }
     #[test]
     fn mixed_choice_tree() {
@@ -240,7 +268,7 @@ mod tests {
             ZeroOrMore(Box::new(GrammarNode::Literal("2".to_owned()))),
             GrammarNode::Literal("3".to_owned()),
         ]);
-        assert_eq!(generate_rule_body(&tokens), expected);
+        assert_eq!(generate_rule_body(&tokens, &mut HashMap::new()), expected);
     }
     #[test]
     fn tree_from_tokens() {
@@ -277,6 +305,9 @@ mod tests {
                 ]))),
             ])),
         };
-        assert_eq!(parse_tokens(tokens), RuleOrRole::Rule(expected_rule));
+        assert_eq!(
+            parse_tokens(tokens, &mut HashMap::new()),
+            RuleOrRole::Rule(expected_rule)
+        );
     }
 }

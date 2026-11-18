@@ -28,6 +28,7 @@ pub fn build_syntax_tree(
     possible_tree: Option<MatchNode>,
 ) -> Result<MatchNode, String> {
     // Take the given tree or the program rule as root
+    // TODO: use the role system instead of searching for program rule
     let mut tree = possible_tree.unwrap_or(MatchNode::Rule {
         name: "program".to_owned(),
         children: vec![],
@@ -127,5 +128,6 @@ fn tokens_match_rule(
             );
             None
         }
+        GrammarNode::FundamentalType(fund_type) => todo!(),
     }
 }

@@ -3,11 +3,12 @@
 use std::collections::HashMap;
 
 use crate::{
-    common::{ColorAction, set_text_color},
     grammar::{
         matches_rule, rules_to_map,
         types::{
-            GrammarNode::{self, Choice, Literal, Optional, Reference, Sequence, ZeroOrMore},
+            GrammarNode::{
+                self, Choice, FundamentalType, Literal, Optional, Reference, Sequence, ZeroOrMore,
+            },
             Rule, RuleMap,
         },
     },
@@ -91,7 +92,7 @@ fn get_rule_depth(rule: &GrammarNode, rules: &RuleMap) -> u32 {
             Optional(value) | ZeroOrMore(value) | GrammarNode::Grouping(value) => {
                 calc_depth(value, rules)
             }
-            Literal(_) => 0,
+            Literal(_) | FundamentalType(_) => 0,
         }
     }
     calc_depth(rule, rules)

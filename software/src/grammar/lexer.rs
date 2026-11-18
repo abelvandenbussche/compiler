@@ -333,4 +333,20 @@ mod tests {
             r#"foo = "\"", { bar } ;"#.to_owned()
         );
     }
+    #[test]
+    fn lex_subroles() {
+        let input = "foo = bar: [test];".to_owned();
+        assert_eq!(
+            lex(input),
+            vec![
+                Identifier("foo".to_owned()),
+                Equals,
+                Role("bar:".to_owned()),
+                LBracket,
+                Identifier("test".to_owned()),
+                RBracket,
+                Semicolon
+            ]
+        );
+    }
 }

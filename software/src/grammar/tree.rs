@@ -20,7 +20,7 @@ pub enum RuleOrRole {
 /// Parses a stream of tokens into a tree structure
 pub fn parse_tokens(
     mut tokens: Vec<EBNFToken>,
-    roles_map: &mut HashMap<String, &GrammarNode>,
+    roles_map: &mut HashMap<String, GrammarNode>,
 ) -> RuleOrRole {
     // A rule should always start with an identifier
     let body_tokens = tokens.split_off(tokens.iter().position(|i| *i == Equals).unwrap());
@@ -54,7 +54,7 @@ pub fn parse_tokens(
 /// Takes in a stream of tokens and uses it to generate a `GrammarNode` that is the body of a rule
 fn generate_rule_body(
     token_stream: &[EBNFToken],
-    role_map: &mut HashMap<String, &GrammarNode>,
+    role_map: &mut HashMap<String, GrammarNode>,
 ) -> GrammarNode {
     let mut nodes = vec![];
     let mut token_iter = token_stream.iter().enumerate();
@@ -98,7 +98,7 @@ fn generate_rule_body(
             }
             Role(role) => {
                 let next_node = generate_rule_body(token_stream, role_map);
-                role_map.insert(role.to_owned(), &next_node);
+                role_map.insert(role.to_owned(), next_node.clone());
                 Some(next_node)
             }
             FundamentalType(fundamental_type) => {
@@ -309,5 +309,21 @@ mod tests {
             parse_tokens(tokens, &mut HashMap::new()),
             RuleOrRole::Rule(expected_rule)
         );
+    }
+    #[test]
+    fn subroles_mapping_test_simple() {
+        let input_tokens = vec![
+            EBNFToken::Role("var_val:".to_owned()),
+            EBNFToken::LBracket,
+            EBNFToken::Identifier("test".to_owned()),
+            RBracket,
+        ];
+        let mut role_map = HashMap::new();
+        let expected: HashMap<String, GrammarNode> = HashMap::from([(
+            "var_val:".to_owned(),
+            GrammarNode::Optional(Box::new(GrammarNode::Reference("test".to_owned()))),
+        )]);
+        let _output = generate_rule_body(&input_tokens, &mut role_map);
+        assert_eq!(role_map, expected);
     }
 }
